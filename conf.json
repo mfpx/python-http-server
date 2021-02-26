@@ -1,0 +1,7 @@
+{
+	"hostname": "192.168.1.100",
+	"port": 80,
+	"blacklist": "blacklist.txt",
+	"logfile": "logs/log.txt",
+	"logging": true
+}
