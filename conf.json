@@ -3,5 +3,6 @@
 	"port": 80,
 	"blacklist": "blacklist.txt",
 	"logfile": "logs/log.txt",
+        "default_filename": "index.html",
 	"logging": true
 }

@@ -1,4 +1,5 @@
 import socket, sys, signal, datetime, json, os
+from os import path
 
 content_array = []
 blacklist_array = []
@@ -124,11 +125,15 @@ try:
         if socket_closed == False:
             rfile = requested_file.split('?')[0] # Parameters after ? are not relevant
             rfile = rfile.lstrip('/')
-            rfile = rfile.replace("%20", " ") # Some browsers replace whitespaces with %20 sequence, this replaces it back for filenames
+            rfile = rfile.replace("%20", " ") # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
+
+            #PAGE DEFAULTS
             if(rfile == ''):
-                rfile = 'index.html' # Load index file as default
+                rfile = readcfg()["default_filename"] # Load index file as default
             elif rfile.endswith('/'):
-                rfile = rfile + 'index.html' # Load index file as default
+                rfile += readcfg()["default_filename"] # Load index file as default
+            elif (path.exists("htdocs/" + rfile) and not(path.isfile("htdocs/" + rfile))):
+                rfile += '/' + readcfg()["default_filename"] # Load index file as default
     
             try:
                 file = open("htdocs/" + rfile, 'rb') # open file , r => read , b => byte format
@@ -171,8 +176,6 @@ try:
                     response = file.read() # Read the input stream into response
                     file.close() # Close the file once read
                     
-                    final_response = header.encode('utf-8')
-                    final_response += response
                 except:
                     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Page for HTTP ' +str(status), ' not found! Closing connection\n')) # Contains \n to separate requests
                     print(msg)
@@ -182,11 +185,14 @@ try:
                     connection.close()
                     
             if socket_closed == False:
+                final_response = header.encode('utf-8')
+                final_response += response
+            
                 connection.send(final_response)
                 connection.close()
         
 except KeyboardInterrupt:
-    print('KeyboardInterrupt')
+    print('Received KeyboardInterrupt!')
     try:
         sys.exit(0)
     except SystemExit:
