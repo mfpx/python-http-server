@@ -19,7 +19,7 @@ def readcfg():
         print(msg)
         logwrite(msg)
         sys.exit(0) # Kill the server if unable to find the config file (and no parameters were provided)
-        
+
 try:
     if readcfg()["logging"] == True:
         LOG = True
@@ -28,6 +28,14 @@ try:
 except:
     LOG = True
 
+try:
+    if readcfg()["server_signature"] == True:
+        SIG = True
+    else:
+        SIG = False
+except:
+    SIG = True
+
 # Writes to the log file
 def logwrite(msg):
     try:
@@ -35,22 +43,31 @@ def logwrite(msg):
             f = open(readcfg()["logfile"], "a")
             f.write(msg + '\n')
             f.close() # Its better to close the file after every write to prevent corruption, theres also no point in keeping the file open if there are no more messages to log
-        
+
     except:
         print("Unable to write to log file!")
-        
+
 # Reads an IP blacklist
 def readblacklist():
     try:
         global blacklist_array
-        if not blacklist_array: # Is the blacklist loaded into memory?
+        if not blacklist_array and readcfg()["blacklist_mode"] == "static": # Is the blacklist loaded into memory?
             with open(readcfg()["blacklist"]) as f:
                 for line in f:
+                    line = line.rstrip('\n') # Trim the newline
+                    blacklist_array.append(line)
+                return blacklist_array
+        elif readcfg()["blacklist_mode"] == "dynamic":
+            blacklist_array = []
+            with open(readcfg()["blacklist"]) as f:
+                for line in f:
+                    line = line.rstrip('\n') # Trim the newline
                     blacklist_array.append(line)
                 return blacklist_array
         else: # Returns the blacklist if in memory
             return blacklist_array
-    except:
+    except Exception as e:
+        print(e)
         msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Unable to read the IP blacklist!'))
         print(msg)
         logwrite(msg)
@@ -68,24 +85,24 @@ try:
         PORT = int(sys.argv[4])
 except:
     PORT = int(readcfg()["port"]) # Read config file
- 
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # AF_INET specifies ipv4
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # SO_REUSEADDR specifies that we are only able to bind to the socket if its not currently in use
-        
+
 try:
     sock.bind((HOST,PORT))
     sock.listen(1)
     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Successfully bound to ', HOST +str(':') +str(PORT)))
     print(msg)
     logwrite(msg)
-    
+
 except Exception as e:
     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Unable to bind to ', HOST +str(':') +str(PORT)))
     print(msg)
     print(e) # For verbose logging purposes - helps with troubleshooting
     logwrite(msg)
     sys.exit()
- 
+
 try:
     while True:
         connection, address = sock.accept() # Accept incoming connections
@@ -104,7 +121,7 @@ try:
             socket_closed = False
         string_list = request.split(' ') # Split request from spaces
         method = string_list[0]
-        
+
         try:
             requested_file = string_list[1]
         except IndexError:
@@ -112,7 +129,7 @@ try:
                 msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'State check received from client')) # Client likely wanted to see if the server is alive
                 print(msg)
                 logwrite(msg)
- 
+
         if socket_closed == False:
             if not method:
                 socket_closed = True
@@ -121,7 +138,7 @@ try:
                 msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: ') +str(method), ' ', requested_file))
             print(msg)
             logwrite(msg)
- 
+
         if socket_closed == False:
             rfile = requested_file.split('?')[0] # Parameters after ? are not relevant
             rfile = rfile.lstrip('/')
@@ -134,12 +151,12 @@ try:
                 rfile += readcfg()["default_filename"] # Load index file as default
             elif (path.exists("htdocs/" + rfile) and not(path.isfile("htdocs/" + rfile))):
                 rfile += '/' + readcfg()["default_filename"] # Load index file as default
-    
+
             try:
                 file = open("htdocs/" + rfile, 'rb') # open file , r => read , b => byte format
                 response = file.read() # Read the input stream into response
                 file.close() # Close the file once read
-            
+
                 if socket_closed == False:
                     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Found requested resource!'))
                     print(msg)
@@ -147,11 +164,12 @@ try:
                     msg = ''.join((('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Serving /', rfile, '\n'))) # Contains \n to separate requests
                     print(msg)
                     logwrite(msg)
-        
+
                 header = 'HTTP/1.1 200 OK\n' # 200 To signify the server understood and will fulfill the request
-                header += 'Server: Python HTTP Server\n' # Server name
+                if SIG == True:
+                    header += 'Server: Python HTTP Server\n' # Server name
                 header += 'Cache-Control: no-cache\n' # Tells the client not to cache the responses
- 
+
                 if(rfile.endswith(".jpg")):
                     mimetype = 'image/jpg'
                 elif(rfile.endswith(".css")):
@@ -160,37 +178,39 @@ try:
                     mimetype = 'image/png'
                 else:
                     mimetype = 'text/html'
- 
+
                 header += 'Content-Type: '+str(mimetype)+'\n\n'
- 
+
             except:
                 if socket_closed == False:
                     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Unable to find requested resource!\n')) # Contains \n to separate requests
                     print(msg)
                     logwrite(msg)
                 header = 'HTTP/1.1 404 Not Found\n\n' # If unable to read the specified file, assume it does not exist and return 404
+                if SIG == True:
+                    header += 'Server: Python HTTP Server\n' # Server name
                 status = '404'
-                
+
                 try:
                     file = open("http_responses/" + status + '.html', 'rb') # open file , r => read , b => byte format
                     response = file.read() # Read the input stream into response
                     file.close() # Close the file once read
-                    
+
                 except:
                     msg = ''.join(('[' +str(datetime.datetime.now().strftime('%c')) +str(']: '), 'Page for HTTP ' +str(status), ' not found! Closing connection\n')) # Contains \n to separate requests
                     print(msg)
                     logwrite(msg)
-                    
+
                     socket_closed = True
                     connection.close()
-                    
+
             if socket_closed == False:
                 final_response = header.encode('utf-8')
                 final_response += response
-            
+
                 connection.send(final_response)
                 connection.close()
-        
+
 except KeyboardInterrupt:
     print('Received KeyboardInterrupt!')
     try:

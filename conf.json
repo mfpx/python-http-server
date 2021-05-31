@@ -1,8 +1,10 @@
 {
-	"hostname": "192.168.1.100",
-	"port": 80,
+	"hostname": "127.0.0.1",
+	"port": 8080,
 	"blacklist": "blacklist.txt",
 	"logfile": "logs/log.txt",
-        "default_filename": "index.html",
+    "default_filename": "index.html",
+	"server_signature": true,
+	"blacklist_mode": "dynamic",
 	"logging": true
 }
