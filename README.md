@@ -15,3 +15,6 @@ Configuration is stored in `conf.json` file.
 * **server_signature** - Boolean (true/false) for whether or not the server should return its signature
 * **blacklist_mode** - There are two blacklist modes, *static* and *dynamic*. Static will read the blacklist on startup, dynamic will query the blacklist with every request - making it possible to update the blacklist while the server is live.
 * **logging** - Boolean (true/false) for whether the server will write to the logfile.
+* **use_encryption** - Boolean(true/false) for whether the server will use SSL/TLS encryption
+* **path_to_cert** - Path to the SSL certificate. Won't be used if *use_encryption* is set to *false*.
+* **path_to_key** - Path to the SSL certificate key. Won't be used if *use_encryption* is set to *false*.
