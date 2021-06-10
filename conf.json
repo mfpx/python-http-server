@@ -1,10 +1,12 @@
 {
 	"hostname": "127.0.0.1",
-	"port": 8080,
+	"port": 80,
 	"blacklist": "blacklist.txt",
 	"logfile": "logs/log.txt",
-    	"default_filename": "index.html",
-	"server_signature": true,
-	"blacklist_mode": "dynamic",
-	"logging": true
+        "logfile_maxlines": 1000,
+        "default_filename": "index.html",
+	"logging": true,
+	"use_encryption": false,
+	"path_to_cert": "",
+	"path_to_key": ""
 }
