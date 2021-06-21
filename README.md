@@ -19,3 +19,18 @@ Configuration is stored in `conf.json` file.
 * **use_encryption** - Boolean(true/false) for whether the server will use SSL/TLS encryption
 * **path_to_cert** - Path to the SSL certificate. Won't be used if *use_encryption* is set to *false*.
 * **path_to_key** - Path to the SSL certificate key. Won't be used if *use_encryption* is set to *false*.
+
+## SSL Configuration
+
+This feature is highly experimental and self-signed certificates might cause the server to crash. There is a self-signed certificate included for ease of testing, it's located in *certs*. You can use self-signed certificates by adding an exception in the browser, then restarting the server.<br />
+Accessing the server running in SSL through a non-SSL connection, will also cause the server to die. This will be fixed later on.<br /><br />
+In order to use SSL, specify the certificate location in *conf.json* and set *use_encryption* to *true*.<br />
+You might also want to change the server port to something other than 80, the default SSL port is 443.
+
+## CLI arguments
+
+There are a couple of arguments available when running the server through CLI.<br />
+* **-h** - This will simply print the available arguments.
+* **-i/--host** - This allows you to specify the hostname to bind to.
+* **-p/--port** - This allows you to specify the port to bind to.
+* **-c/--custom-config** - This allows you to specify a different configuration file.
