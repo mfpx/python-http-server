@@ -462,3 +462,14 @@
 [Fri Feb 26 04:38:06 2021]: State check received from client
 [Fri Feb 26 04:38:06 2021]: Client sent a request with no method
 
+[Mon Jun 21 11:47:49 2021]: Unable to bind to 127.0.0.1:80
+[Mon Jun 21 11:47:53 2021]: Unable to bind to 127.0.0.1:81
+[Mon Jun 21 11:47:58 2021]: Unable to bind to 127.0.0.1:800
+[Mon Jun 21 11:48:00 2021]: Successfully bound to 127.0.0.1:8000
+[Mon Jun 21 11:52:28 2021]: Unable to bind to 127.0.0.1:80
+[Mon Jun 21 11:52:31 2021]: Successfully bound to 127.0.0.1:8000
+[Mon Jun 21 11:52:48 2021]: Successfully bound to 127.0.0.1:8000
+[Mon Jun 21 11:55:39 2021]: Unable to bind to 127.0.0.1:80
+[Mon Jun 21 11:55:45 2021]: Successfully bound to 127.0.0.1:8000
+[Mon Jun 21 11:56:03 2021]: Unable to bind to 192.168.1.100:80
+[Mon Jun 21 11:58:55 2021]: Unable to bind to 127.0.0.1:80
