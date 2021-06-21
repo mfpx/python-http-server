@@ -12,8 +12,8 @@ Configuration is stored in `conf.json` file.
 * **blacklist** - Filename for the IP blacklist. This can be edited while the server is running.
 * **logfile** - Filename for the logfile. This is where the server will attempt to write log messages to.
 * **default_filename** - This is the default file to be served when the client requests a directory instead of a specific file.
-* **server_signature** - Boolean (true/false) for whether or not the server should return its signature
-* **blacklist_mode** - There are two blacklist modes, *static* and *dynamic*. Static will read the blacklist on startup, dynamic will query the blacklist with every request - making it possible to update the blacklist while the server is live.
+* ~~**server_signature** - Boolean (true/false) for whether or not the server should return its signature~~
+* ~~**blacklist_mode** - There are two blacklist modes, *static* and *dynamic*. Static will read the blacklist on startup, dynamic will query the blacklist with every request - making it possible to update the blacklist while the server is live.~~
 * **logging** - Boolean (true/false) for whether the server will write to the logfile.
 * **use_encryption** - Boolean(true/false) for whether the server will use SSL/TLS encryption
 * **path_to_cert** - Path to the SSL certificate. Won't be used if *use_encryption* is set to *false*.
