@@ -1012,3 +1012,30 @@
 [Mon Oct 18 16:07:09 2021]: Serving /favicon.ico
 
 [Mon Oct 18 16:07:41 2021]: Successfully bound to 127.0.0.1:8080
+[Mon Oct 18 16:18:38 2021]: Successfully bound to 127.0.0.1:8080
+[Mon Oct 18 16:18:43 2021]: Incoming connection from 127.0.0.1:53142
+[Mon Oct 18 16:18:43 2021]: [KEEP-ALIVE]: State check received from client
+[Mon Oct 18 16:18:43 2021]: Client sent a request with no method
+
+[Mon Oct 18 16:18:52 2021]: Incoming connection from 127.0.0.1:63118
+[Mon Oct 18 16:18:52 2021]: [KEEP-ALIVE]: State check received from client
+[Mon Oct 18 16:18:52 2021]: Client sent a request with no method
+
+[Mon Oct 18 16:19:00 2021]: Incoming connection from 127.0.0.1:51094
+[Mon Oct 18 16:19:00 2021]: [KEEP-ALIVE]: State check received from client
+[Mon Oct 18 16:19:00 2021]: Client sent a request with no method
+
+[Mon Oct 18 16:19:00 2021]: Incoming connection from 127.0.0.1:53009
+[Mon Oct 18 16:19:00 2021]: GET /
+[Mon Oct 18 16:19:00 2021]: Found requested resource!
+[Mon Oct 18 16:19:00 2021]: Serving /index.html
+
+[Mon Oct 18 16:19:00 2021]: Incoming connection from 127.0.0.1:64226
+[Mon Oct 18 16:19:00 2021]: [KEEP-ALIVE]: State check received from client
+[Mon Oct 18 16:19:00 2021]: Client sent a request with no method
+
+[Mon Oct 18 16:19:00 2021]: Incoming connection from 127.0.0.1:52153
+[Mon Oct 18 16:19:00 2021]: GET /favicon.ico
+[Mon Oct 18 16:19:00 2021]: Found requested resource!
+[Mon Oct 18 16:19:00 2021]: Serving /favicon.ico
+
