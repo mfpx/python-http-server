@@ -16,7 +16,9 @@ Configuration is stored in `conf.json` file.
 * ~~**blacklist_mode** - There are two blacklist modes, *static* and *dynamic*. Static will read the blacklist on startup, dynamic will query the blacklist with every request - making it possible to update the blacklist while the server is live.~~
 * **blacklist_rcode** - Specifies which file (HTTP status code) to use when responding to a blacklisted client, this file must be present in *http_responses*.
 * **logging** - Boolean (true/false) for whether the server will write to the logfile.
+* **threads** - Integer, determines the number of threads to use. **Must** be 1 or more.
 * **use_encryption** - Boolean(true/false) for whether the server will use SSL/TLS encryption
+* **strict_cert_validation** - Boolean(true/false) for whether the server will allow the usage of self-signed or otherwise "invalid" certificates.
 * **path_to_cert** - Path to the SSL certificate. Won't be used if *use_encryption* is set to *false*.
 * **path_to_key** - Path to the SSL certificate key. Won't be used if *use_encryption* is set to *false*.
 
