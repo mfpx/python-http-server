@@ -1,6 +1,6 @@
 import server
 import pytest
-from os import path
+import os
 
 
 @pytest.fixture
@@ -23,12 +23,12 @@ def test_http_response_loader_returns_false_on_bad_file():
     assert server.httpResponseLoader('999') is False
 
 
-def test_http_response_loader_returns_file_pointer():
+def test_http_response_loader_returns_bytes():
     assert type(server.httpResponseLoader('404')) == bytes
 
 
 def test_config_file_exists():
-    assert path.isfile("conf.json") is True
+    assert os.path.isfile("conf.json") is True
 
 
 def test_config_value_types(get_config_data):
