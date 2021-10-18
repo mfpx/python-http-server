@@ -91,7 +91,6 @@ def logwrite(msg):
             f = open(readcfg()["logfile"], "a")
             f.write(msg + '\n')
             f.close()  # Its better to close the file after every write to prevent corruption, theres also no point in keeping the file open if there are no more messages to log
-
     except:
         print("Unable to write to log file!")
 
@@ -341,12 +340,13 @@ def thread_function(name):
             os._exit(0)
 
 
-if (readcfg()["threads"] >= 1):
-    print("multi threading ok, continuing")
-    try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
-            executor.map(thread_function, range(readcfg()["threads"]))
-    except:
-        pass
-else:
-    print("Thread count is set to 0! Please set the value to at least 1.")
+if __name__ == '__main__':
+    if (readcfg()["threads"] >= 1):
+        print("multi threading ok, continuing")
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
+                executor.map(thread_function, range(readcfg()["threads"]))
+        except:
+            pass
+    else:
+        print("Thread count is set to 0! Please set the value to at least 1.")
