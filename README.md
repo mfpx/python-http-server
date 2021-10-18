@@ -24,8 +24,8 @@ Configuration is stored in `conf.json` file.
 
 ## SSL Configuration
 
-This feature is highly experimental and self-signed certificates might cause the server to crash. There is a self-signed certificate included for ease of testing, it's located in *certs*. You can use self-signed certificates by adding an exception in the browser, then restarting the server.<br />
-Accessing the server running in SSL through a non-SSL connection, will also cause the server to die. This will be fixed later on.<br /><br />
+This feature is highly experimental and self-signed certificates might cause the server to crash. There is a self-signed certificate included for ease of testing, it's located in *certs*. You can use self-signed certificates by setting *strict_cert_validation* to *false*.<br />
+Accessing the server running in SSL through a non-SSL connection, will also cause the server to die if *strict_cert_validation* is set to *true*.<br /><br />
 In order to use SSL, specify the certificate location in *conf.json* and set *use_encryption* to *true*.<br />
 You might also want to change the server port to something other than 80, the default SSL port is 443.
 
