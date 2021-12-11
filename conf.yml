@@ -1,0 +1,13 @@
+blacklist: blacklist.txt
+blacklist_rcode: '403'
+default_filename: index.html
+hostname: 127.0.0.1
+logfile: logs/log.txt
+logfile_maxlines: 1000
+logging: true
+path_to_cert: certs/cert.pem
+path_to_key: certs/key.pem
+port: 8080
+strict_cert_validation: false
+threads: 25
+use_encryption: true

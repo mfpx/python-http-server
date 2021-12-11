@@ -1,9 +1,12 @@
 # To do:
 # -Implement multi-port listeners for HTTP/HTTPS
+# -Add classes (cleanup code a bit)
 # -Fix a crash where the certificate is untrusted (WORKAROUND DONE)
 # -Implement better SSL-related crash handling
 # -Change config from JSON to YAML to handle comments
 # -Add threading to support multiple clients (PART DONE)
+# -Add fuzzing using atheris
+# --Add fuzzing/not fuzzing badge to the repo (shield.io?)
 
 import socket
 import sys
@@ -13,7 +16,13 @@ import os
 import ssl
 import getopt
 import concurrent.futures
+import yaml
 from os import path
+
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 
 content_array = []
 CUSTOM_CONFIG = False
@@ -28,7 +37,6 @@ def getopts(argv):
     except getopt.GetoptError:
         print("server.py -h <hostname> -p <port> -c <path_to_config_file>")
         sys.exit(1)
-
 
 # Parses arguments from the array
 for opt, arg in getopts(sys.argv[1:]):
@@ -74,7 +82,6 @@ def readcfg():
     else:
         return content_array
 
-
 try:
     if readcfg()["logging"] is True:
         LOG = True
@@ -83,6 +90,10 @@ try:
 except:
     LOG = True
 
+# Converts old format config to new (json -> yaml)
+def jsonToYaml():
+    with open('conf.yml') as conf:
+        return(yaml.load(conf, Loader=Loader))
 
 # Writes to the log file
 def logwrite(msg):
