@@ -2,3 +2,8 @@ logs/*
 htdocs/test/*
 *pycache*
 certs/*
+.vscode/*
+dist/*
+__pycache__/*
+build/*
+*.spec

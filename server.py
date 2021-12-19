@@ -3,7 +3,6 @@
 # -Add classes (cleanup code a bit)
 # -Fix a crash where the certificate is untrusted (WORKAROUND DONE)
 # -Implement better SSL-related crash handling
-# -Change config from JSON to YAML to handle comments
 # -Add threading to support multiple clients (PART DONE)
 # -Add fuzzing using atheris
 # --Add fuzzing/not fuzzing badge to the repo (shield.io?)
@@ -11,12 +10,12 @@
 import socket
 import sys
 import datetime
-import json
 import os
 import ssl
 import getopt
 import concurrent.futures
 import yaml
+import logrot
 from os import path
 
 try:
@@ -37,6 +36,7 @@ def getopts(argv):
     except getopt.GetoptError:
         print("server.py -h <hostname> -p <port> -c <path_to_config_file>")
         sys.exit(1)
+
 
 # Parses arguments from the array
 for opt, arg in getopts(sys.argv[1:]):
@@ -59,7 +59,7 @@ def readcfg():
         if CUSTOM_CONFIG:
             try:
                 with open(CUSTOM_CONFIG) as f:
-                    content_array = json.load(f)
+                    content_array = yaml.load(f, Loader=Loader)
                     return content_array
             except:
                 msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
@@ -69,8 +69,8 @@ def readcfg():
                 os._exit(1)
         else:
             try:
-                with open('conf.json') as f:
-                    content_array = json.load(f)
+                with open('conf.yml') as f:
+                    content_array = yaml.load(f, Loader=Loader)
                     return content_array
             except:
                 msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
@@ -90,19 +90,19 @@ try:
 except:
     LOG = True
 
-# Converts old format config to new (json -> yaml)
-def jsonToYaml():
-    with open('conf.yml') as conf:
-        return(yaml.load(conf, Loader=Loader))
 
 # Writes to the log file
 def logwrite(msg):
+    rotator = logrot.LogRotate()
+    split = readcfg()["logfile"].split("/")
     try:
         if LOG is True:
             f = open(readcfg()["logfile"], "a")
             f.write(msg + '\n')
             f.close()  # Its better to close the file after every write to prevent corruption, theres also no point in keeping the file open if there are no more messages to log
-    except:
+            rotator.rotate(split[0], split[1], readcfg()["logfile_maxlines"])
+    except Exception as a:
+        print(a)
         print("Unable to write to log file!")
 
 
@@ -141,7 +141,7 @@ if 'PORT' not in locals():
 
 def httpResponseLoader(status):
     try:
-        # Open file, r => read , b => byte format
+        # Open file, r => read, b => byte format
         file = open("http_responses/" + status + '.html', 'rb')
         response = file.read()  # Read the input stream into response
         file.close()  # Close the file once read
@@ -159,6 +159,7 @@ def httpResponseLoader(status):
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # SO_REUSEADDR specifies that we are only able to bind to the socket if its not currently in use
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 
 try:
     sock.bind((HOST, PORT))
@@ -353,7 +354,6 @@ def thread_function(name):
 
 if __name__ == '__main__':
     if (readcfg()["threads"] >= 1):
-        print("multi threading ok, continuing")
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
                 executor.map(thread_function, range(readcfg()["threads"]))

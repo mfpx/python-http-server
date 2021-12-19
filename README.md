@@ -2,7 +2,7 @@
 Very simple python HTTP server<br />
 Written in Python 3.9.1. Earlier versions might be supported - try and see what happens
 
-It allows you to serve HTML, CSS and some image files. Later versions will have support for all major MIME types
+It allows you to serve HTML, CSS and some image files. Later versions will have support for all major MIME types.
 
 [![Python application](https://github.com/mfpx/python-http-server/actions/workflows/python-app.yml/badge.svg)](https://github.com/mfpx/python-http-server/actions/workflows/python-app.yml)
 

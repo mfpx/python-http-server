@@ -1,13 +1,89 @@
+# Blacklist contains a list of addresses
+# that will be denied access to all resources
+#
+# Default: blacklist.txt
 blacklist: blacklist.txt
+
+# Blacklist "return" code is the HTTP status
+# code that gets served when a client is
+# not allowed to access a resource
+#
+# Default: 403
 blacklist_rcode: '403'
+
+# Default filename of the website index
+# this will be served when the client
+# requests / (directory root) instead
+# of a specific resource
+#
+# Default: index.html
 default_filename: index.html
+
+# IP address the server will attempt
+# to bind to
+#
+# Default: 127.0.0.1
 hostname: 127.0.0.1
+
+# This is where the main logfile
+# that the server will write its messages
+# to. It will also be used when rotating
+# the logfile
+#
+# Default: logs/log.txt
 logfile: logs/log.txt
+
+# Maximum number of lines per
+# single logfile. This prevents
+# very large logfiles from being generated
+#
+# Default: 1000
 logfile_maxlines: 1000
+
+# Whether the server will write to
+# logfile, messages will be printed to
+# stdout regardless of this value
+#
+# Default: true
 logging: true
+
+# Path to SSL/TLS certificate file for
+# encryption
+#
+# Default: certs/cert.pem
 path_to_cert: certs/cert.pem
+
+# Path to SSL/TLS certificate key file
+# for encryption
+#
+# Default: certs/key.pem
 path_to_key: certs/key.pem
+
+# Port the server will attempt to
+# bind to
+#
+# Default: 8080
 port: 8080
+
+# Whether to allow self-signed certificates
+# or not. Setting this to false while using
+# a self-signed certificate will cause the server
+# to shutdown on first request.
+#
+# Default: false
 strict_cert_validation: false
+
+# The number of threads to use when running the
+# server. Higher number will increase resource usage
+# but the server will be faster.
+# Value must be 1 or higher.
+#
+# Default: 25, Recommended: <10
 threads: 25
+
+# Whether to use SSL/TLS encryption.
+# Other SSL/TLS options will have no effect
+# if this is set to false.
+#
+# Default: true
 use_encryption: true

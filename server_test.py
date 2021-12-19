@@ -28,7 +28,7 @@ def test_http_response_loader_returns_bytes():
 
 
 def test_config_file_exists():
-    assert os.path.isfile("conf.json") is True
+    assert os.path.isfile("conf.yml") is True
 
 
 def test_config_value_types(get_config_data):
@@ -49,3 +49,4 @@ def test_blacklist_imports():
     assert type(bl) == list
     # blacklist must be empty during testing
     assert len(bl) == 0
+
