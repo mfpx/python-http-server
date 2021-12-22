@@ -1,10 +1,10 @@
 # To do:
-# -Implement multi-port listeners for HTTP/HTTPS
+# -Implement multi-port listeners for HTTP/HTTPS - Won't implement
 # -Add classes (cleanup code a bit)
 # -Fix a crash where the certificate is untrusted (WORKAROUND DONE)
 # -Implement better SSL-related crash handling
 # -Add threading to support multiple clients (PART DONE)
-# -Add fuzzing using atheris
+# -Add fuzzing using atheris - Backlog
 # --Add fuzzing/not fuzzing badge to the repo (shield.io?)
 
 import socket
@@ -142,7 +142,7 @@ if 'PORT' not in locals():
 def httpResponseLoader(status):
     try:
         # Open file, r => read, b => byte format
-        file = open("http_responses/" + status + '.html', 'rb')
+        file = open("http_responses/" + str(status) + '.html', 'rb')
         response = file.read()  # Read the input stream into response
         file.close()  # Close the file once read
         return response
@@ -163,7 +163,7 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 try:
     sock.bind((HOST, PORT))
-    sock.listen(1)
+    sock.listen() # Takes a queue backlog int, keep this empty
     msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
                   + str(']: '), 'Successfully bound to ', HOST + str(':') + str(PORT)))
     print(msg)
@@ -178,7 +178,7 @@ except Exception as e:
     sys.exit()
 
 
-def thread_function(name):
+def threaded_server_main(name):
     print("Thread {} starting!".format(name))
     try:
         while True:
@@ -356,7 +356,7 @@ if __name__ == '__main__':
     if (readcfg()["threads"] >= 1):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
-                executor.map(thread_function, range(readcfg()["threads"]))
+                executor.map(threaded_server_main, range(readcfg()["threads"]))
         except:
             pass
     else:

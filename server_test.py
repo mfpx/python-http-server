@@ -8,7 +8,7 @@ def get_config_data():
     return server.readcfg()
 
 
-def test_config_json_imports(get_config_data):
+def test_config_yaml_imports(get_config_data):
     # must be a dictionary (key-value pairs)
     assert type(get_config_data) == dict
     # must be 13 in length
@@ -34,9 +34,9 @@ def test_config_file_exists():
 def test_config_value_types(get_config_data):
     loopctr = 0
 
-    # types for existing config values
-    value_types = [str, int, str, str, int, str,
-                   str, bool, int, bool, bool, str, str]
+    # types for existing config values test_config_yaml_imports
+    value_types = [str, int, str, str, str, int,
+                   bool, str, str, int, bool, int, bool]
 
     for x in get_config_data:
         assert type(get_config_data[x]) == value_types[loopctr]

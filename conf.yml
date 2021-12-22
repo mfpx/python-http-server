@@ -9,7 +9,7 @@ blacklist: blacklist.txt
 # not allowed to access a resource
 #
 # Default: 403
-blacklist_rcode: '403'
+blacklist_rcode: 403
 
 # Default filename of the website index
 # this will be served when the client
@@ -37,7 +37,7 @@ logfile: logs/log.txt
 # single logfile. This prevents
 # very large logfiles from being generated
 #
-# Default: 1000
+# Default: 1000, Recommended: <100000
 logfile_maxlines: 1000
 
 # Whether the server will write to

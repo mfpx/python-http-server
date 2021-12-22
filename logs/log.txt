@@ -35,3 +35,129 @@
 [Sun Dec 19 04:03:38 2021]: GET /+a
 [Sun Dec 19 04:03:38 2021]: Unable to find requested resource!
 
+[Wed Dec 22 05:08:56 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:08:56 2021]: Page for HTTP 999 not found! Closing connection
+
+[Wed Dec 22 05:10:50 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:10:50 2021]: Page for HTTP 999 not found! Closing connection
+
+[Wed Dec 22 05:13:04 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:13:04 2021]: Page for HTTP 999 not found! Closing connection
+
+[Wed Dec 22 05:13:36 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:13:36 2021]: Page for HTTP 999 not found! Closing connection
+
+[Wed Dec 22 05:14:34 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:14:34 2021]: Page for HTTP 999 not found! Closing connection
+
+[Wed Dec 22 05:14:45 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:15:15 2021]: Incoming connection from 127.0.0.1:38666
+[Wed Dec 22 05:15:15 2021]: GET /
+[Wed Dec 22 05:15:15 2021]: Found requested resource!
+[Wed Dec 22 05:15:15 2021]: Serving /index.html
+
+[Wed Dec 22 05:15:16 2021]: Incoming connection from 127.0.0.1:38668
+[Wed Dec 22 05:15:16 2021]: GET /favicon.ico
+[Wed Dec 22 05:15:16 2021]: Found requested resource!
+[Wed Dec 22 05:15:16 2021]: Serving /favicon.ico
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38670
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38672
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38674
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38676
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38678
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38680
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38682
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38686
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38688
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:15:43 2021]: Incoming connection from 127.0.0.1:38690
+[Wed Dec 22 05:15:43 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38692
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38694
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38696
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38698
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38700
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38702
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38704
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38706
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38708
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:16:08 2021]: Incoming connection from 127.0.0.1:38710
+[Wed Dec 22 05:16:08 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:31 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38712
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38714
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38718
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38720
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38722
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38724
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38728
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38730
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:35 2021]: Incoming connection from 127.0.0.1:38732
+[Wed Dec 22 05:17:35 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:17:36 2021]: Incoming connection from 127.0.0.1:38734
+[Wed Dec 22 05:17:36 2021]: Page for HTTP 403 not found! Closing connection
+
+[Wed Dec 22 05:18:06 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:18:10 2021]: Incoming connection from 127.0.0.1:38736
+[Wed Dec 22 05:18:10 2021]: IP 127.0.0.1 in blacklist. Closing connection!
+
+[Wed Dec 22 05:19:25 2021]: Incoming connection from 127.0.0.1:38738
+[Wed Dec 22 05:19:25 2021]: GET /
+[Wed Dec 22 05:19:25 2021]: Found requested resource!
+[Wed Dec 22 05:19:25 2021]: Serving /index.html
+
