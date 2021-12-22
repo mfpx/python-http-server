@@ -1,9 +1,10 @@
-logs/*
+logs/
 htdocs/test/*
 *pycache*
 certs/*
-.vscode/*
+.vscode
 dist/*
 __pycache__/*
 build/*
 *.spec
+*.pyc

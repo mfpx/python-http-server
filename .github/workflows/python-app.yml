@@ -33,7 +33,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=200 --statistics
     - name: Test with pytest
       run: |
-        pytest server_test.py
+        pytest
     - name: Build packages
       run: |
         chmod +x ./tools/build.sh

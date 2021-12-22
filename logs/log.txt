@@ -161,3 +161,6 @@
 [Wed Dec 22 05:19:25 2021]: Found requested resource!
 [Wed Dec 22 05:19:25 2021]: Serving /index.html
 
+[Wed Dec 22 05:37:39 2021]: Successfully bound to 127.0.0.1:8080
+[Wed Dec 22 05:37:39 2021]: Page for HTTP 999 not found! Closing connection
+
