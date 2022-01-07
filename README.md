@@ -5,6 +5,7 @@ Written in Python 3.9.1. Earlier versions might be supported - try and see what 
 It allows you to serve HTML, CSS and some image files. Later versions will have support for all major MIME types.
 
 [![Python HTTP Server](https://github.com/mfpx/python-http-server/actions/workflows/python-app.yml/badge.svg)](https://github.com/mfpx/python-http-server/actions/workflows/python-app.yml)
+[![codecov](https://codecov.io/gh/mfpx/python-http-server/branch/main/graph/badge.svg?token=5BTTCZGJ2E)](https://codecov.io/gh/mfpx/python-http-server)
 
 ## Configuration file
 Configuration is stored in `conf.yml` file.
