@@ -50,3 +50,9 @@ def test_blacklist_imports():
     # blacklist must be empty during testing
     assert len(bl) == 0
 
+
+def test_yaml_cloader():
+    from yaml import CLoader as Loader
+    # if there is an exception, we'll leave it unhandled so the test fails
+
+

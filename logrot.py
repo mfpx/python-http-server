@@ -1,10 +1,13 @@
+"""
+Auxiliary module for simple max-line-based log rotation
+"""
 import os
 
 class Helpers:
     def loglen(self, logpath, log):
         with open(logpath + "/" + log, 'r') as logfile:
             for count, line in enumerate(logfile):
-                pass
+                pass # Line content is irrelevant
         return count
 
     def __getlastlog(self, logpath):

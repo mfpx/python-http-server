@@ -7,24 +7,78 @@
 # -Add fuzzing using atheris - Backlog
 # --Add fuzzing/not fuzzing badge to the repo (shield.io?)
 
+# Core server functionality
 import socket
+# Exit support and positional arguments
 import sys
+# For logging
 import datetime
+# Various OS provided functions
 import os
+# SSL/TLS support
 import ssl
+# CLI arguments
 import getopt
+# Threading
 import concurrent.futures
+from tkinter.tix import StdButtonBox
+# Config handling
 import yaml
+# Internal modules
 import logrot
+# Path traversal
 from os import path
 
 try:
-    from yaml import CLoader as Loader
+    from yaml import CLoader as Loader # Author suggests using the C version of the loader
 except ImportError:
-    from yaml import Loader
+    from yaml import Loader # If above doesn't work, default to generic loader
 
+# Globals
 content_array = []
 CUSTOM_CONFIG = False
+
+
+class ConfigLoader:
+    # Reads the configuration file into an array
+    def readcfg():
+        global content_array
+        if not content_array:  # Is the configuration file loaded into memory?
+            if CUSTOM_CONFIG:
+                try:
+                    with open(CUSTOM_CONFIG) as f:
+                        content_array = yaml.load(f, Loader=Loader)
+                        return content_array
+                except:
+                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
+                                + str(']: '), 'Unable to find specified config file'))
+                    print(msg)
+                    # Kill the server ungracefully - prevents duplicate stdout messages
+                    os._exit(1)
+            else:
+                try:
+                    with open('conf.yml') as f:
+                        content_array = yaml.load(f, Loader=Loader)
+                        return content_array
+                except:
+                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
+                                            ) + str(']: '), 'Unable to read configuration file!'))
+                    print(msg)
+                    # Kill the server ungracefully - prevents duplicate stdout messages
+                    os._exit(1)
+        # If it is, return the array instead of reading the config file again (reduces iops)
+        else:
+            return content_array
+ 
+            
+# class stub
+class HelperFunctions:
+    print("a")
+
+
+# class stub
+class Server:
+    print("a")
 
 
 # Returns an argument list array
@@ -40,8 +94,8 @@ def getopts(argv):
 
 # Parses arguments from the array
 for opt, arg in getopts(sys.argv[1:]):
-    if opt == '-h':
-        # Print syntax if -h was given
+    if opt == '-h' or opt == '--help':
+        # Print syntax if -h or --help was given
         print("server.py -h <hostname> -p <port> -c <path_to_config_file>")
         sys.exit()  # Kill the server after printing help
     elif opt in ("-i", "--host"):
@@ -353,11 +407,12 @@ def threaded_server_main(name):
 
 
 if __name__ == '__main__':
+    # ADD AN INIT FUNCTION TO SET UP THE SERVER, THIS AVOIDS FLOATING CODE
     if (readcfg()["threads"] >= 1):
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
                 executor.map(threaded_server_main, range(readcfg()["threads"]))
-        except:
-            pass
+        except Exception as ex:
+            print("There has been an exception in the thread pool! Here is the trace:\n" + ex)
     else:
         print("Thread count is set to 0! Please set the value to at least 1.")
