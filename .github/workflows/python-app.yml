@@ -5,9 +5,9 @@ name: Python HTTP Server
 
 on:
   push:
-    branches: [ main ]
+    branches: [ deploy ]
   pull_request:
-    branches: [ main ]
+    branches: [ deploy ]
 
 jobs:
   build:
