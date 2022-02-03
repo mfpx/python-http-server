@@ -21,7 +21,6 @@ import ssl
 import getopt
 # Threading
 import concurrent.futures
-from tkinter.tix import StdButtonBox
 # Config handling
 import yaml
 # Internal modules
