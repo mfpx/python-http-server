@@ -1,6 +1,6 @@
 # python-http-server
 Very simple python HTTP server<br />
-Written in Python 3.9.1. Earlier versions might be supported - try and see what happens
+Written in Python 3.10.2. Earlier versions might be supported - try and see what happens. Originally written in 3.9.2, and that is a known working version.
 
 It allows you to serve HTML, CSS and some image files. Later versions will have support for all major MIME types.
 
