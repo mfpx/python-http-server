@@ -36,7 +36,7 @@ def test_config_value_types(get_config_data):
 
     # types for existing config values test_config_yaml_imports
     value_types = [str, int, str, str, str, int,
-                   bool, str, str, int, bool, int, bool]
+                   bool, str, str, int, bool, bool]
 
     for x in get_config_data:
         assert type(get_config_data[x]) == value_types[loopctr]
