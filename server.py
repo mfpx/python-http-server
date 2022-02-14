@@ -19,9 +19,8 @@ import os
 import ssl
 # CLI arguments
 import getopt
-# Threading
-import concurrent.futures
-from tkinter.tix import StdButtonBox
+# Asynchronous IO for performance
+import asyncio
 # Config handling
 import yaml
 # Internal modules
@@ -209,194 +208,178 @@ def httpResponseLoader(status):
         return False
 
 
-# AF_INET specifies ipv4
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# SO_REUSEADDR specifies that we are only able to bind to the socket if its not currently in use
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-
-try:
-    sock.bind((HOST, PORT))
-    sock.listen() # Takes a queue backlog int, keep this empty
-    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
-                  + str(']: '), 'Successfully bound to ', HOST + str(':') + str(PORT)))
-    print(msg)
-    logwrite(msg)
-
-except Exception as e:
-    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
-                  + str(']: '), 'Unable to bind to ', HOST + str(':') + str(PORT)))
-    print(msg)
-    print(e)  # For verbose logging purposes - helps with troubleshooting
-    logwrite(msg)
-    sys.exit()
-
-
-def threaded_server_main(name):
-    print("Thread {} starting!".format(name))
-    try:
-        while True:
-            connection, address = sock.accept()  # Accept incoming connections
-
-            # Encrypt traffic using a certificate
-            if readcfg()["use_encryption"]:
-                socket = ssl.wrap_socket(
-                                        connection,
-                                        server_side=True,
-                                        certfile=readcfg()["path_to_cert"],
-                                        keyfile=readcfg()["path_to_key"],
-                                        ssl_version=ssl.PROTOCOL_TLS_SERVER,
-                                        do_handshake_on_connect=False
-                                        )
+async def server_main():
+    # Encrypt traffic using a certificate
+    if readcfg()["use_encryption"]:
+        try:
+            sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            sslctx.load_cert_chain(readcfg()["path_to_cert"], readcfg()["path_to_key"])
+        except ssl.SSLError as e:
+            if readcfg()["strict_cert_validation"]:
+                print("[OpenSSL]: Server has encountered a certificate issue! Shutting down...")
+                print("[Debug]: " + str(e))
                 try:
-                    socket.do_handshake()
-                except ssl.SSLError as e:
-                    if readcfg()["strict_cert_validation"]:
-                        print(
-                            "[OpenSSL]: Server has encountered a certificate issue! Shutting down...")
-                        print("[Debug]: " + str(e))
-                        try:
-                            sys.exit(0)
-                        except SystemExit:
-                            os._exit(0)
-                    else:
-                        pass
+                    sys.exit(0)
+                except SystemExit:
+                    os._exit(0)
             else:
-                socket = connection
+                pass
+    else:
+        sslctx = None
 
-            print("--- Thread {} output ---".format(name))
-            msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
-                          'Incoming connection from ', address[0] + str(':') + str(address[1])))
-            print(msg)
-            logwrite(msg)
-            request = socket.recv(1024).decode('utf-8')
-            try:
-                readblacklist().index(address[0])
+    flags = [socket.SOL_SOCKET, socket.SO_REUSEADDR]
+    server = await asyncio.start_server(response, HOST, PORT, ssl = sslctx, family = socket.AF_INET, flags = flags)
 
-                # 403 to signify that the client is not allowed to access the resource
-                header = 'HTTP/1.1 403 Forbidden\n'
-                header += 'Server: Python HTTP Server\n'  # Server name
-                # Tells the client not to cache the responses
-                header += 'Cache-Control: no-store\n'
-                header += 'Content-Type: text/html\n\n'  # Set MIMEtype to text/html
+    if server:
+        for sock in server.sockets:
+            address = sock.getsockname()
 
-                response = httpResponseLoader(
-                    readcfg()["blacklist_rcode"])  # Get the 403 page
-                if response is False:
-                    socket_closed = True
-                    socket.close()
+        msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
+                    'Listening on ', address[0] + str(':') + str(address[1])))
+        print(msg)
+        logwrite(msg)
 
-                if response is not False:
-                    blacklist_response = header.encode('utf-8')
-                    blacklist_response += response
-                    socket.send(blacklist_response)
-                    socket.close()  # If in blacklist, close the connection
+    async with server:
+        await server.serve_forever()
 
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
-                        ']: '), 'IP ', address[0], (' in blacklist. Closing connection!\n')))
-                    print(msg)
-                    logwrite(msg)
 
-                    socket_closed = True
-            except Exception as e:
-                socket_closed = False
-            string_list = request.split(' ')  # Split request from spaces
-            method = string_list[0]
+async def response(reader, writer):
+    try:
+        data = await reader.read(2048)
+        request = data.decode('utf-8')
+        address = writer.get_extra_info('peername')
+        try:
+            readblacklist().index(address[0])
 
-            try:
-                requested_file = string_list[1]
-            except IndexError:
-                if socket_closed is False:
-                    # Client likely wanted to see if the server is alive
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
-                        ']: '), '[KEEP-ALIVE]: State check received from client'))
-                    print(msg)
-                    logwrite(msg)
+            # 403 to signify that the client is not allowed to access the resource
+            header = 'HTTP/1.1 403 Forbidden\n'
+            header += 'Server: Python HTTP Server\n'  # Server name
+            # Tells the client not to cache the responses
+            header += 'Cache-Control: no-store\n'
+            header += 'Content-Type: text/html\n\n'  # Set MIMEtype to text/html
 
-            if socket_closed is False:
-                if not method:
-                    socket_closed = True
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
-                                  'Client sent a request with no method\n'))  # Contains \n to separate requests
-                else:
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
-                                             ) + str(']: ') + str(method), ' ', requested_file))
+            response = httpResponseLoader(
+                readcfg()["blacklist_rcode"])  # Get the 403 page
+            if response is False:
+                socket_closed = True
+                await writer.drain()
+                writer.close()
+
+            if response is not False:
+                blacklist_response = header.encode('utf-8')
+                blacklist_response += response
+                writer.write(blacklist_response)
+                await writer.drain()
+                writer.close()  # If in blacklist, close the connection
+
+                msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
+                    ']: '), 'IP ', address[0], (' in blacklist. Closing connection!\n')))
                 print(msg)
                 logwrite(msg)
 
+                socket_closed = True
+        except Exception as e:
+            socket_closed = False
+
+        string_list = request.split(' ')  # Split request from spaces
+        method = string_list[0]
+
+        try:
+            requested_file = string_list[1]
+        except IndexError:
             if socket_closed is False:
-                # Parameters after ? are not relevant
-                rfile = requested_file.split('?')[0]
-                rfile = rfile.lstrip('/')
-                # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
-                rfile = rfile.replace("%20", " ")
+                # Client likely wanted to see if the server is alive
+                msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
+                    ']: '), '[KEEP-ALIVE]: State check received from client'))
+                print(msg)
+                logwrite(msg)
 
-                # PAGE DEFAULTS
-                if(rfile == ''):
-                    # Load index file as default
-                    rfile = readcfg()["default_filename"]
-                elif rfile.endswith('/'):
-                    # Load index file as default
-                    rfile += readcfg()["default_filename"]
-                elif (path.exists("htdocs/" + rfile) and not(path.isfile("htdocs/" + rfile))):
-                    # Load index file as default
-                    rfile += '/' + readcfg()["default_filename"]
+        if socket_closed is False:
+            if not method:
+                socket_closed = True
+                msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
+                                'Client sent a request with no method\n'))  # Contains \n to separate requests
+            else:
+                msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
+                                            ) + str(']: ') + str(method), ' ', requested_file))
+            print(msg)
+            logwrite(msg)
 
-                try:
-                    # open file, r => read , b => byte format
-                    file = open("htdocs/" + rfile, 'rb')
-                    response = file.read()  # Read the input stream into response
-                    file.close()  # Close the file once read
+        if socket_closed is False:
+            # Parameters after ? are not relevant
+            rfile = requested_file.split('?')[0]
+            rfile = rfile.lstrip('/')
+            # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
+            rfile = rfile.replace("%20", " ")
 
-                    if socket_closed is False:
-                        msg = ''.join(
-                            ('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '), 'Found requested resource!'))
-                        print(msg)
-                        logwrite(msg)
-                        msg = ''.join((('[' + str(datetime.datetime.now().strftime('%c')) + str(
-                            ']: '), 'Serving /', rfile, '\n')))  # Contains \n to separate requests
-                        print(msg)
-                        logwrite(msg)
+            # PAGE DEFAULTS
+            if(rfile == ''):
+                # Load index file as default
+                rfile = readcfg()["default_filename"]
+            elif rfile.endswith('/'):
+                # Load index file as default
+                rfile += readcfg()["default_filename"]
+            elif (path.exists("htdocs/" + rfile) and not(path.isfile("htdocs/" + rfile))):
+                # Load index file as default
+                rfile += '/' + readcfg()["default_filename"]
 
-                    # 200 To signify the server understood and will fulfill the request
-                    header = 'HTTP/1.1 200 OK\n'
-                    header += 'Server: Python HTTP Server\n'  # Server name
-                    # Tells the client to validate their cache on load
-                    header += 'Cache-Control: no-cache\n'
-
-                    if(rfile.endswith(".jpg")):
-                        mimetype = 'image/jpg'
-                    elif(rfile.endswith(".css")):
-                        mimetype = 'text/css'
-                    elif(rfile.endswith(".png")):
-                        mimetype = 'image/png'
-                    else:
-                        mimetype = 'text/html'
-
-                    header += 'Content-Type: '+str(mimetype)+'\n\n'
-
-                except:
-                    if socket_closed is False:
-                        msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
-                            ']: '), 'Unable to find requested resource!\n'))  # Contains \n to separate requests
-                        print(msg)
-                        logwrite(msg)
-                    # If unable to read the specified file, assume it does not exist and return 404
-                    header = 'HTTP/1.1 404 Not Found\n'
-                    header += 'Server: Python HTTP Server\n'  # Server name
-                    header += 'Content-Type: text/html\n\n'  # MIMEtype set to html
-
-                    response = httpResponseLoader('404')
-                    if response is False:
-                        socket_closed = True
-                        socket.close()
+            try:
+                # open file, r => read , b => byte format
+                file = open("htdocs/" + rfile, 'rb')
+                response = file.read()  # Read the input stream into response
+                file.close()  # Close the file once read
 
                 if socket_closed is False:
-                    final_response = header.encode('utf-8')
-                    final_response += response
+                    msg = ''.join(
+                        ('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '), 'Found requested resource!'))
+                    print(msg)
+                    logwrite(msg)
+                    msg = ''.join((('[' + str(datetime.datetime.now().strftime('%c')) + str(
+                        ']: '), 'Serving /', rfile, '\n')))  # Contains \n to separate requests
+                    print(msg)
+                    logwrite(msg)
 
-                    socket.send(final_response)
-                    socket.close()
+                # 200 To signify the server understood and will fulfill the request
+                header = 'HTTP/1.1 200 OK\n'
+                header += 'Server: Python HTTP Server\n'  # Server name
+                # Tells the client to validate their cache on load
+                header += 'Cache-Control: no-cache\n'
+
+                if(rfile.endswith(".jpg")):
+                    mimetype = 'image/jpg'
+                elif(rfile.endswith(".css")):
+                    mimetype = 'text/css'
+                elif(rfile.endswith(".png")):
+                    mimetype = 'image/png'
+                else:
+                    mimetype = 'text/html'
+
+                header += 'Content-Type: '+str(mimetype)+'\n\n'
+
+            except:
+                if socket_closed is False:
+                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
+                        ']: '), 'Unable to find requested resource!\n'))  # Contains \n to separate requests
+                    print(msg)
+                    logwrite(msg)
+                # If unable to read the specified file, assume it does not exist and return 404
+                header = 'HTTP/1.1 404 Not Found\n'
+                header += 'Server: Python HTTP Server\n'  # Server name
+                header += 'Content-Type: text/html\n\n'  # MIMEtype set to html
+
+                response = httpResponseLoader('404')
+                if response is False:
+                    socket_closed = True
+                    await writer.drain()
+                    writer.close()
+
+            if socket_closed is False:
+                final_response = header.encode('utf-8')
+                final_response += response
+
+                writer.write(final_response)
+                await writer.drain()
+                writer.close()
 
     except KeyboardInterrupt:
         print("\nReceived KeyboardInterrupt!")
@@ -407,12 +390,4 @@ def threaded_server_main(name):
 
 
 if __name__ == '__main__':
-    # ADD AN INIT FUNCTION TO SET UP THE SERVER, THIS AVOIDS FLOATING CODE
-    if (readcfg()["threads"] >= 1):
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=readcfg()["threads"]) as executor:
-                executor.map(threaded_server_main, range(readcfg()["threads"]))
-        except Exception as ex:
-            print("There has been an exception in the thread pool! Here is the trace:\n" + ex)
-    else:
-        print("Thread count is set to 0! Please set the value to at least 1.")
+    asyncio.run(server_main())

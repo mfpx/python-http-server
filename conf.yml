@@ -73,14 +73,6 @@ port: 8080
 # Default: false
 strict_cert_validation: false
 
-# The number of threads to use when running the
-# server. Higher number will increase resource usage
-# but the server will be faster.
-# Value must be 1 or higher.
-#
-# Default: 25, Recommended: <10
-threads: 25
-
 # Whether to use SSL/TLS encryption.
 # Other SSL/TLS options will have no effect
 # if this is set to false.
