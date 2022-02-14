@@ -11,12 +11,8 @@ def get_config_data():
 def test_config_yaml_imports(get_config_data):
     # must be a dictionary (key-value pairs)
     assert type(get_config_data) == dict
-    # must be 13 in length
-    assert len(get_config_data) == 13
-
-
-def test_thread_count_higher_than_zero(get_config_data):
-    assert get_config_data["threads"] >= 1
+    # must be 12 in length
+    assert len(get_config_data) == 12
 
 
 def test_http_response_loader_returns_false_on_bad_file():
