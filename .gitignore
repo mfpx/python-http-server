@@ -1,4 +1,4 @@
-logs/
+logs/*
 htdocs/test/*
 *pycache*
 certs/*
