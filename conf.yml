@@ -63,7 +63,7 @@ path_to_key: certs/key.pem
 # bind to
 #
 # Default: 8080
-port: 8080
+port: 80
 
 # Whether to allow self-signed certificates
 # or not. Setting this to false while using
@@ -78,4 +78,4 @@ strict_cert_validation: false
 # if this is set to false.
 #
 # Default: true
-use_encryption: true
+use_encryption: false
