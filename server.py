@@ -6,6 +6,7 @@
 # -Add threading to support multiple clients (PART DONE)
 # -Add fuzzing using atheris - Backlog
 # --Add fuzzing/not fuzzing badge to the repo (shield.io?)
+# -Eventlet rework
 
 # Core server functionality
 import socket
