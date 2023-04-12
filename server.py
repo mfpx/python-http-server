@@ -49,7 +49,7 @@ class ConfigLoader:
                     with open(CUSTOM_CONFIG) as f:
                         content_array = yaml.load(f, Loader=Loader)
                         return content_array
-                except:
+                except Exception: # Catch the base class for exceptions
                     msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
                                 + str(']: '), 'Unable to find specified config file'))
                     print(msg)
@@ -60,7 +60,7 @@ class ConfigLoader:
                     with open('conf.yml') as f:
                         content_array = yaml.load(f, Loader=Loader)
                         return content_array
-                except:
+                except Exception: # Catch the base class for exceptions
                     msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
                                             ) + str(']: '), 'Unable to read configuration file!'))
                     print(msg)
