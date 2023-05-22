@@ -12,15 +12,15 @@ def test_config_yaml_imports(get_config_data):
     # must be a dictionary (key-value pairs)
     assert type(get_config_data) == dict
     # must be 12 in length
-    assert len(get_config_data) == 12
+    assert len(get_config_data) == 13
 
 
 def test_http_response_loader_returns_false_on_bad_file():
-    assert server.httpResponseLoader('999') is False
+    assert server.http_response_loader('999') is False
 
 
 def test_http_response_loader_returns_bytes():
-    assert type(server.httpResponseLoader('404')) == bytes
+    assert type(server.http_response_loader('404')) == bytes
 
 
 def test_config_file_exists():
@@ -32,7 +32,8 @@ def test_config_value_types(get_config_data):
 
     # types for existing config values test_config_yaml_imports
     value_types = [str, int, str, str, str, int,
-                   bool, str, str, int, bool, bool]
+                   bool, str, str, int, bool, bool,
+                   str]
 
     for x in get_config_data:
         assert type(get_config_data[x]) == value_types[loopctr]

@@ -37,8 +37,8 @@ logfile: logs/log.txt
 # single logfile. This prevents
 # very large logfiles from being generated
 #
-# Default: 1000, Recommended: <100000
-logfile_maxlines: 1000
+# Default: 100000, Recommended: <1000000
+logfile_maxlines: 100000
 
 # Whether the server will write to
 # logfile, messages will be printed to
@@ -78,4 +78,11 @@ strict_cert_validation: false
 # if this is set to false.
 #
 # Default: true
-use_encryption: true
+use_encryption: false
+
+# Default logging level.
+# This determines the lowest level
+# of logging messages to be recorded
+#
+# Default: DEBUG
+logging_level: DEBUG

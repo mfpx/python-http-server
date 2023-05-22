@@ -9,3 +9,4 @@ build/*
 *.spec
 *.pyc
 crypto.py
+venv
