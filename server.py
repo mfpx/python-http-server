@@ -40,6 +40,40 @@ except ImportError:
 content_array = []
 CUSTOM_CONFIG = False
 
+
+class ConfigLoader:
+    # Reads the configuration file into an array
+    def readcfg():
+        global content_array
+        if not content_array:  # Is the configuration file loaded into memory?
+            if CUSTOM_CONFIG:
+                try:
+                    with open(CUSTOM_CONFIG) as f:
+                        content_array = yaml.load(f, Loader=Loader)
+                        return content_array
+                except Exception: # Catch the base class for exceptions
+                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
+                                + str(']: '), 'Unable to find specified config file'))
+                    print(msg)
+                    # Kill the server ungracefully - prevents duplicate stdout messages
+                    os._exit(1)
+            else:
+                try:
+                    with open('conf.yml') as f:
+                        content_array = yaml.load(f, Loader=Loader)
+                        return content_array
+                except Exception: # Catch the base class for exceptions
+                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
+                                            ) + str(']: '), 'Unable to read configuration file!'))
+                    print(msg)
+                    # Kill the server ungracefully - prevents duplicate stdout messages
+                    os._exit(1)
+        # If it is, return the array instead of reading the config file again (reduces iops)
+        else:
+            return content_array
+ 
+            
+# class stub
 class HelperFunctions:
 
     def __init__(self, custom_config = None):
