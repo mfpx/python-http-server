@@ -16,11 +16,11 @@ def test_config_yaml_imports(get_config_data):
 
 
 def test_http_response_loader_returns_false_on_bad_file():
-    assert server.http_response_loader('999') is False
+    assert server.Server.http_response_loader('999') is False
 
 
 def test_http_response_loader_returns_bytes():
-    assert type(server.http_response_loader('404')) == bytes
+    assert type(server.Server.http_response_loader('404')) == bytes
 
 
 def test_config_file_exists():
