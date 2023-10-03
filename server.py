@@ -9,7 +9,7 @@
 
 # Core server functionality
 import socket
-# Exit support and positional arguments
+# Exit support, positional arguments and reflection
 import sys
 # For logging
 import datetime
@@ -30,6 +30,17 @@ from os import path
 # Logging functions
 import logging
 import logging.handlers
+# Python file type magic
+import magic
+# Import handling
+from importlib import import_module
+# Class inspection for reflection
+import inspect
+# Coloured text support - mainly for readabilty
+from termcolor import colored
+# Typehinting for reflection where a class object reference is returned
+from typing import Type, Optional
+from types import ModuleType
 
 try:
     from yaml import CLoader as Loader # Author suggests using the C version of the loader
@@ -39,7 +50,6 @@ except ImportError:
 # Globals
 content_array = []
 CUSTOM_CONFIG = False
-
 
 class ConfigLoader:
     # Reads the configuration file into an array
@@ -79,15 +89,97 @@ class HelperFunctions:
     def __init__(self, custom_config = None):
         self.custom_config = custom_config
 
+
     def init_logger(self) -> logging.Logger:
         logging.basicConfig(
-            filename=readcfg()["logfile"],
-            filemode='a',
             level=readcfg()["logging_level"].upper(),
-            format='[%(asctime)s]: %(message)s',
-            datefmt='%c')
+            format='[%(asctime)s] [%(levelname)s]: %(message)s',
+            datefmt='%c',
+            handlers=[
+                logging.handlers.RotatingFileHandler(
+                    readcfg()["logfile"],
+                    'a',
+                    self.__unit_conversion(
+                        readcfg()["logfile_unit"],
+                        readcfg()["logfile_maxsize"],
+                        'bytes'),
+                    5),
+                logging.StreamHandler()])
         logging.info("Logging init complete")
         return logging.getLogger("ServerLogger")
+
+
+    def __unit_conversion(self, in_unit: str, in_unit_value: int, out_unit: str) -> int:
+        # Check if passed in types are correct
+        if not isinstance(in_unit_value, int):
+            raise TypeError("in_unit_value must be an integer")
+        if not isinstance(out_unit, str):
+            raise TypeError("out_unit must be a string")
+        if not isinstance(in_unit, str):
+            raise TypeError("in_unit must be a string")
+        
+        # Function to convert units
+        if in_unit == "bytes" and out_unit == "kilobytes":
+            return in_unit_value / 1024
+        elif in_unit == "bytes" and out_unit == "megabytes":
+            return in_unit_value / 1024 / 1024
+        elif in_unit == "bytes" and out_unit == "gigabytes":
+            return in_unit_value / 1024 / 1024 / 1024
+        elif in_unit == "kilobytes" and out_unit == "bytes":
+            return in_unit_value * 1024
+        elif in_unit == "megabytes" and out_unit == "bytes":
+            return in_unit_value * 1024 * 1024
+        elif in_unit == "gigabytes" and out_unit == "bytes":
+            return in_unit_value * 1024 * 1024 * 1024
+        elif in_unit == out_unit:
+            return in_unit_value
+        else:
+            return 0
+
+
+    def __has_method(self, class_obj: Type, method_name: str) -> bool:
+        if hasattr(class_obj, method_name):
+            method = getattr(class_obj, method_name)
+            return callable(method) and method.__qualname__.split(".")[0] == class_obj.__name__
+        return False
+
+
+    def __plugin_init_class(self, module: ModuleType) -> Optional[Type]:
+        # Get the module's attributes
+        attributes = dir(module)
+        # Find the plugin's init function
+        for attribute in attributes:
+            if attribute.startswith("PluginInit_") and inspect.isclass(getattr(module, attribute)):
+                return getattr(module, attribute)
+        # Use the init class specified in plugin's meta
+        if module.PLUGIN_DATA["meta"]["initclass"] in attributes:
+            return getattr(module, module.PLUGIN_DATA["meta"]["initclass"])
+
+
+    # Plugin loader function
+    def load_plugins(self):
+        # Load plugins from the plugins directory
+        plugin_dir = readcfg()["plugins_dir"]
+        if os.path.exists(plugin_dir):
+            plugins = os.listdir(plugin_dir)
+            for plugin in plugins:
+                if plugin.endswith(".py"):
+                    name = plugin[:-3]
+                    try:
+                        # Importlib to handle the programmatic import
+                        plugin_module = import_module(f"{plugin_dir}.{name}")
+                        init_class = self.__plugin_init_class(plugin_module)
+                        # Call the expected init function
+                        if self.__has_method(init_class, "init"):
+                            init_class().init()
+                        else:
+                            raise ImportError(f"Plugin {name} is missing an init function")
+                        # Log that the plugin was loaded
+                        logging.info(f"Loaded plugin {plugin_module.PLUGIN_DATA['name']}, version {plugin_module.PLUGIN_DATA['version']} by {plugin_module.PLUGIN_DATA['author']}")
+                    except Exception as e:
+                        logging.error(f"Error loading plugin: {name}")
+                        logging.error(str(e))
+                        continue
 
 
     def __argparser(self) -> argparse.Namespace:
@@ -95,7 +187,7 @@ class HelperFunctions:
         parser.add_argument("-i", "--host", help = "Address to listen on", type = str)
         parser.add_argument("-p", "--port", help = "Port to listen on", type = int)
         parser.add_argument("-c", "--custom-config", help = "Custom configuration file to use", type = str)
-
+        
         return parser.parse_args()
 
 
@@ -119,7 +211,6 @@ class HelperFunctions:
 def readcfg():
     global content_array, CUSTOM_CONFIG
     if not content_array:  # Is the configuration file loaded into memory?
-        print(CUSTOM_CONFIG)
         if CUSTOM_CONFIG:
             try:
                 with open(CUSTOM_CONFIG) as f:
@@ -155,24 +246,6 @@ except:
     LOG = True
 
 
-# Writes to the log file
-def log(msg):
-    rotator = logrot.LogRotate()
-    split = readcfg()["logfile"].split("/")
-    try:
-        if LOG is True:
-            f = open(readcfg()["logfile"], "a")
-            f.write(msg + '\n')
-            f.close()  # Its better to close the file after every write to prevent corruption, theres also no point in keeping the file open if there are no more messages to log
-            rotator.rotate(split[0], split[1], readcfg()["logfile_maxlines"])
-            print(msg)
-        else:
-            print(msg)
-    except Exception as a:
-        print(a)
-        print("Unable to write to log file!")
-
-
 # Reads an IP blacklist
 def readblacklist():
     try:
@@ -191,9 +264,7 @@ def readblacklist():
         # else: # Returns the blacklist if in memory
         #    return blacklist_array
     except:
-        msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
-                                 ) + str(']: '), 'Unable to read the IP blacklist!'))
-        log(msg)
+        logger.error('Unable to read the IP blacklist!')
 
 
 # If hostname has not been defined, read config
@@ -231,7 +302,7 @@ class Server:
         except:
             msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '), 'Page for HTTP '
                         + str(status), ' not found! Closing connection\n'))  # Contains \n to separate requests
-            log(msg)
+            logger.info(f'Page for HTTP {status} not found! Closing connection')
             return False
 
 
@@ -267,14 +338,9 @@ class Server:
                 address = sock.getsockname()
 
             if sslctx != None:
-                msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
-                    'TLS Enabled'))
-                
-                log(msg)
+                logger.info('TLS Enabled')
 
-            msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '),
-                        'Listening on ', address[0] + str(':') + str(address[1])))
-            log(msg)
+            logger.info(f'Listening on {address[0]}:{address[1]}')
 
         async with server:
             await server.serve_forever()
@@ -376,23 +442,14 @@ class Server:
                     header += 'Server: Python HTTP Server\n'  # Server name
                     # Tells the client to validate their cache on load
                     header += 'Cache-Control: no-cache\n'
+                    header += 'Content-Type: '+str(magic.from_file("htdocs/" + rfile, mime=True))+'\n\n'
 
-                    if(rfile.endswith(".jpg")):
-                        mimetype = 'image/jpg'
-                    elif(rfile.endswith(".css")):
-                        mimetype = 'text/css'
-                    elif(rfile.endswith(".png")):
-                        mimetype = 'image/png'
-                    else:
-                        mimetype = 'text/html'
-
-                    header += 'Content-Type: '+str(mimetype)+'\n\n'
-
-                except:
+                except Exception as e:
                     if socket_closed is False:
                         msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(
                             ']: '), 'Unable to find requested resource!\n'))  # Contains \n to separate requests
                         log(msg)
+                    print(e)
                     # If unable to read the specified file, assume it does not exist and return 404
                     header = 'HTTP/1.1 404 Not Found\n'
                     header += 'Server: Python HTTP Server\n'  # Server name
@@ -419,12 +476,10 @@ class Server:
             except SystemExit:
                 os._exit(0)
 
-
 if __name__ == '__main__':
     hf = HelperFunctions()
+    logger = hf.init_logger()
+    hf.load_plugins()
     args = hf.arg_actions()
     server = Server(args)
-    logger = hf.init_logger()
-    logger.addHandler(logging.handlers.RotatingFileHandler(readcfg()["logfile"]))
-    #logging.error("test message")
     asyncio.run(server.server_main())

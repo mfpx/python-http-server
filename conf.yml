@@ -33,12 +33,13 @@ hostname: 127.0.0.1
 # Default: logs/log.txt
 logfile: logs/log.txt
 
-# Maximum number of lines per
-# single logfile. This prevents
-# very large logfiles from being generated
+# Maximum filesize of a single logfile
+# This prevents very large logfiles from being generated
 #
-# Default: 100000, Recommended: <1000000
-logfile_maxlines: 100000
+# Default: 10, Recommended: <100
+logfile_maxsize: 10
+# Units available: bytes, kilobytes, megabytes, gigabytes
+logfile_unit: megabytes
 
 # Whether the server will write to
 # logfile, messages will be printed to
@@ -86,3 +87,9 @@ use_encryption: false
 #
 # Default: DEBUG
 logging_level: DEBUG
+
+# Plugin directory.
+# Plugins are loaded from here on server start.
+#
+# Default: plugins
+plugins_dir: plugins
