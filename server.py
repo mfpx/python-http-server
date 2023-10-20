@@ -21,6 +21,7 @@ import ssl
 import argparse
 # Asynchronous IO for performance
 import asyncio
+import signal
 # Config handling
 import yaml
 # Path traversal
@@ -49,7 +50,6 @@ except ImportError:
 # Globals
 content_array = []
 CUSTOM_CONFIG = False
-
 
 class HelperFunctions:
 
@@ -224,8 +224,8 @@ class Server:
                 sslctx.load_cert_chain(cfg["path_to_cert"], cfg["path_to_key"])
             except ssl.SSLError as e:
                 if cfg["strict_cert_validation"]:
-                    print("[OpenSSL]: Server has encountered a certificate issue! Shutting down...")
-                    print("[Debug]: " + str(e))
+                    logging.critical("Server has encountered a certificate issue! Shutting down...")
+                    logging.debug(e)
                     try:
                         sys.exit(0)
                     except SystemExit:
@@ -366,12 +366,10 @@ class Server:
                     await writer.drain()
                     writer.close()
 
-        except KeyboardInterrupt:
-            print("\nReceived KeyboardInterrupt!")
-            try:
-                sys.exit(0)
-            except SystemExit:
-                os._exit(0)
+        except Exception as e:
+            logging.error(f"Exception: {e}")
+            writer.close()
+            await writer.wait_closed()
 
 if __name__ == '__main__':
     hf = HelperFunctions()
@@ -380,4 +378,9 @@ if __name__ == '__main__':
     hf.load_plugins()
     args = hf.arg_actions()
     server = Server(args)
-    asyncio.run(server.server_main())
+    loop = asyncio.get_event_loop()
+
+    try:
+        asyncio.run(server.server_main())
+    except KeyboardInterrupt:
+        loop.stop()
