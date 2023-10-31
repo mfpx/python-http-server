@@ -1,7 +1,10 @@
 from string import Template
 
 class Responses:
-    def __init__(self):
+    def __call__(self) -> None:
+        raise RuntimeError(f'Do not call {self.__name__} directly')
+
+    def __init__(self) -> None:
         self.responses = {
             200: "OK",
             301: "Moved Permanently",
@@ -19,17 +22,36 @@ class Responses:
             413: "Payload Too Large",
             414: "URI Too Long",
             415: "Unsupported Media Type",
+            000: "Unknown Status",
         }
+
+    def __strnumeric(self, string) -> int:
+        if isinstance(string, str) and string.isnumeric():
+            return int(string)
+        elif isinstance(string, int):
+            return string
+        else:
+            return 000
         
-    def get_response(self, code):
+    def get_response(self, code) -> str:
+        code = self.__strnumeric(code)
         return self.responses[code]
     
-    def get_response_header(self, code):
+    def get_response_header(self, code) -> str:
+        code = self.__strnumeric(code)
         return f"HTTP/1.1 {code} {self.responses[code]}\r\n"
 
-    def get_response_body(self, code):
-        template = open("http_responses/response.html.template", 'r')
+    def get_response_body(self, code) -> str:
+        code = self.__strnumeric(code)
+
+        template = open("responses/response.html.template", 'r')
         template_content = Template(template.read(-1))
         template.close()
 
         return template_content.substitute({"code": code, "code_text": self.responses[code]})
+
+class Headers:
+    def __call__(self) -> None:
+        raise RuntimeError(f'Do not call {self.__name__} directly')
+
+    

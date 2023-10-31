@@ -93,3 +93,16 @@ logging_level: DEBUG
 #
 # Default: plugins
 plugins_dir: plugins
+
+# Server signature.
+# Server name string reported to the client.
+#
+# Default: Python HTTP Server
+signature: Python HTTP Server
+
+# Server signature reporting.
+# Controls whether or not the signature
+# is included in HTTP responses to clients.
+#
+# Default: on
+signature_reporting: on

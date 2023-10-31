@@ -41,6 +41,8 @@ from termcolor import colored
 # Typehinting for reflection where a class object reference is returned
 from typing import Type, Optional
 from types import ModuleType
+# HTTP response loading
+from http_responses import Responses
 
 try:
     from yaml import CLoader as Loader # Author suggests using the C version of the loader
@@ -77,7 +79,7 @@ class HelperFunctions:
 
 
     # Reads the configuration file into an array
-    def readcfg(self):
+    def readcfg(self) -> dict:
         global content_array
         if not content_array:  # Is the configuration file loaded into memory?
             if CUSTOM_CONFIG:
@@ -169,9 +171,8 @@ def readblacklist():
 
         # If the blacklist doesn't exist, create a blank file
         if (not path.isfile(cfg["blacklist"])):
-            open(cfg["blacklist"], "x")
+            open(cfg["blacklist"], 'x')
 
-        # if not blacklist_array: # Is the blacklist loaded into memory?
         with open(cfg["blacklist"]) as f:
             for line in f:
                 blacklist_array.append(line.rstrip('\n'))
@@ -179,7 +180,7 @@ def readblacklist():
         # else: # Returns the blacklist if in memory
         #    return blacklist_array
     except:
-        logging.error('Unable to read the IP blacklist!')
+        logging.error("Unable to read the IP blacklist!")
 
 
 class Server:
@@ -201,22 +202,7 @@ class Server:
                 self.port = port
 
 
-    def http_response_loader(self, status):
-        try:
-            # Open file, r => read, b => byte format
-            file = open(f"http_responses/{str(status)}.html", 'rb')
-            response = file.read()  # Read the input stream into response
-            file.close()  # Close the file once read
-            return response
-
-        except:
-            msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')) + str(']: '), 'Page for HTTP '
-                        + str(status), ' not found! Closing connection\n'))  # Contains \n to separate requests
-            logging.info(f'Page for HTTP {status} not found! Closing connection')
-            return False
-
-
-    async def server_main(self):
+    async def server_main(self) -> None:
         # Encrypt traffic using a certificate
         if cfg["use_encryption"]:
             try:
@@ -227,9 +213,9 @@ class Server:
                     logging.critical("Server has encountered a certificate issue! Shutting down...")
                     logging.debug(e)
                     try:
-                        sys.exit(0)
+                        sys.exit(1)
                     except SystemExit:
-                        os._exit(0)
+                        os._exit(1)
                 else:
                     pass
         else:
@@ -248,30 +234,32 @@ class Server:
                 address = sock.getsockname()
 
             if sslctx != None:
-                logging.info('TLS Enabled')
+                logging.info("TLS Enabled")
 
-            logging.info(f'Listening on {address[0]}:{address[1]}')
+            logging.info(f"Listening on {address[0]}:{address[1]}")
 
         async with server:
             await server.serve_forever()
 
 
-    async def response(self, reader, writer):
+    async def response(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         try:
+            r = Responses()
             data = await reader.read(2048)
-            request = data.decode('utf-8')
-            address = writer.get_extra_info('peername')
+            request = data.decode("utf-8")
+            address = writer.get_extra_info("peername")
             try:
                 readblacklist().index(address[0])
 
                 # 403 to signify that the client is not allowed to access the resource
-                header = 'HTTP/1.1 403 Forbidden\n'
-                header += 'Server: Python HTTP Server\n'  # Server name
+                header = "HTTP/1.1 403 Forbidden\n"
+                if cfg["signature_reporting"]:
+                    header += f'Server: {cfg["signature"]}\n'  # Server name
                 # Tells the client not to cache the responses
-                header += 'Cache-Control: no-store\n'
-                header += 'Content-Type: text/html\n\n'  # Set MIMEtype to text/html
+                header += "Cache-Control: no-store\n"
+                header += "Content-Type: text/html\n\n"  # Set MIMEtype to text/html
 
-                response = self.http_response_loader(
+                response = Responses().get_response_body(
                     cfg["blacklist_rcode"])  # Get the 403 page
                 if response is False:
                     socket_closed = True
@@ -279,19 +267,19 @@ class Server:
                     writer.close()
 
                 if response is not False:
-                    blacklist_response = header.encode('utf-8')
+                    blacklist_response = header.encode("utf-8")
                     blacklist_response += response
                     writer.write(blacklist_response)
                     await writer.drain()
                     writer.close()  # If in blacklist, close the connection
 
-                    logging.info(f"IP {address[0]} in blacklist. Closing connection!")
+                    logging.info(f"IP {address[0]} in blacklist. Closing connection.")
 
                     socket_closed = True
             except Exception as e:
                 socket_closed = False
 
-            string_list = request.split(' ')  # Split request by space
+            string_list = request.split(" ")  # Split request by space
             method = string_list[0]
 
             try:
@@ -299,7 +287,7 @@ class Server:
             except IndexError:
                 if socket_closed is False:
                     # Client likely wanted to see if the server is alive
-                    logging.info("Keep-alive: State check received from client")
+                    logging.info("State check received from client")
 
             if socket_closed is False:
                 if not method:
@@ -313,7 +301,7 @@ class Server:
                 rfile = requested_file.split('?')[0]
                 rfile = rfile.lstrip('/')
                 # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
-                rfile = rfile.replace("%20", " ")
+                rfile = rfile.replace("%20", ' ')
 
                 # PAGE DEFAULTS
                 if(rfile == ''):
@@ -322,44 +310,45 @@ class Server:
                 elif rfile.endswith('/'):
                     # Load index file as default
                     rfile += cfg["default_filename"]
-                elif (path.exists("htdocs/" + rfile) and not(path.isfile("htdocs/" + rfile))):
+                elif (path.exists(f"htdocs/{rfile}") and not(path.isfile(f"htdocs/{rfile}"))):
                     # Load index file as default
                     rfile += '/' + cfg["default_filename"]
 
                 try:
                     # open file, r => read , b => byte format
-                    file = open("htdocs/" + rfile, 'rb')
+                    file = open(f"htdocs/{rfile}", "rb")
                     response = file.read()  # Read the input stream into response
                     file.close()  # Close the file once read
 
                     if socket_closed is False:
-                        logging.info("Found requested resource!")
+                        logging.info("Found requested resource")
                         logging.info(f"Serving /{rfile}")
 
                     # 200 To signify the server understood and will fulfill the request
-                    header = 'HTTP/1.1 200 OK\n'
-                    header += 'Server: Python HTTP Server\n'  # Server name
+                    header = r.get_response_header(200)
+                    if cfg["signature_reporting"]:
+                        header += f'Server: {cfg["signature"]}\n'  # Server name
                     # Tells the client to validate their cache on load
-                    header += 'Cache-Control: no-cache\n'
-                    header += 'Content-Type: '+str(magic.from_file("htdocs/" + rfile, mime=True))+'\n\n'
+                    header += 'Cache-Control: no-cache, must-revalidate\n'
+                    header += f'Content-Type: {str(magic.from_file(f"htdocs/{rfile}", mime=True))}\n\n'
 
                 except Exception as e:
                     if socket_closed is False:
                         logging.info("Unable to find requested resource!")
-                    #print(e)
                     # If unable to read the specified file, assume it does not exist and return 404
-                    header = 'HTTP/1.1 404 Not Found\n'
-                    header += 'Server: Python HTTP Server\n'  # Server name
-                    header += 'Content-Type: text/html\n\n'  # MIMEtype set to html
+                    header = r.get_response_header(404)
+                    if cfg["signature_reporting"]:
+                        header += f'Server: {cfg["signature"]}\n'  # Server name
+                    header += "Content-Type: text/html\n\n"  # MIMEtype set to html
 
-                    response = self.http_response_loader('404')
+                    response = r.get_response_body(404).encode("utf-8")  # Get the 404 page
                     if response is False:
                         socket_closed = True
                         await writer.drain()
                         writer.close()
 
                 if socket_closed is False:
-                    final_response = header.encode('utf-8')
+                    final_response = header.encode("utf-8")
                     final_response += response
 
                     writer.write(final_response)
@@ -371,7 +360,7 @@ class Server:
             writer.close()
             await writer.wait_closed()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     hf = HelperFunctions()
     cfg = hf.readcfg()
     logger.Logger(cfg).logging_init()

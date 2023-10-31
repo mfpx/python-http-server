@@ -1,16 +1,42 @@
 import logging
 import logging.handlers
+from datetime import datetime
+from termcolor import colored
+
+class CustomFormatter(logging.Formatter):
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_message = f"[{self.__asctime(record, '%c')}] [{self.__colour_level(record)}]: {record.getMessage()}"
+        return log_message
+
+    def __asctime(self, record: logging.LogRecord, datefmt: str = None) -> str:
+        dt = datetime.fromtimestamp(record.created)
+        return dt.strftime(datefmt)
+
+    def __colour_level(self, record: logging.LogRecord) -> str:
+        if record.levelno == logging.DEBUG:
+            return colored(record.levelname, "blue")
+        elif record.levelno == logging.INFO:
+            return colored(record.levelname, "green")
+        elif record.levelno == logging.WARNING:
+            return colored(record.levelname, "yellow")
+        elif record.levelno == logging.ERROR:
+            return colored(record.levelname, "red")
+        elif record.levelno == logging.CRITICAL:
+            return colored(record.levelname, "magenta")
+        else:
+            return colored(record.levelname, "white")
 
 class Logger:
 
     def __call__(self) -> None:
-        raise RuntimeError(f'Do not call {self.__name__} directly')
+        raise RuntimeError(f"Do not call {self.__name__} directly")
 
     def __init__(self, server_config_dict: dict) -> None:
         self.logger_config = self.__make_logger_config(server_config_dict)
 
     def __make_logger_config(self, config: dict) -> None:
-        values = ['logfile_maxsize', 'logfile_unit', 'logfile', 'logging_level', 'logging']
+        values = ["logfile_maxsize", "logfile_unit", "logfile", "logging_level", "logging"]
         out_dict = {}
         for value in values:
             out_dict[value] = config[value]
@@ -44,6 +70,9 @@ class Logger:
             return 0
 
     def logging_init(self) -> logging.Logger:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(CustomFormatter())
+
         if self.logger_config["logging"]:
             handlers = [
                 logging.handlers.RotatingFileHandler(
@@ -54,14 +83,13 @@ class Logger:
                         self.logger_config["logfile_maxsize"],
                         'bytes'),
                     5),
-                logging.StreamHandler()]
+                stream_handler]
         else:
-            handlers = [logging.StreamHandler()]
+            # If logging is disabled, only log to stdout
+            handlers = [stream_handler]
 
         logging.basicConfig(
             level=self.logger_config["logging_level"].upper(),
-            format='[%(asctime)s] [%(levelname)s]: %(message)s',
-            datefmt='%c',
             handlers=handlers)
         logging.info("Logging init complete")
         return logging.getLogger("ServerLogger")
