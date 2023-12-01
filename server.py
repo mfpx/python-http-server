@@ -1,6 +1,5 @@
 # To do:
 # -Implement multi-port listeners for HTTP/HTTPS - Won't implement
-# -Add classes (cleanup code a bit)
 # -Fix a crash where the certificate is untrusted (WORKAROUND DONE)
 # -Implement better SSL-related crash handling
 # -Add threading to support multiple clients (PART DONE)
@@ -36,13 +35,15 @@ import magic
 from importlib import import_module
 # Class inspection for reflection
 import inspect
-# Coloured text support - mainly for readabilty
-from termcolor import colored
 # Typehinting for reflection where a class object reference is returned
 from typing import Type, Optional
 from types import ModuleType
 # HTTP response loading
 from http_responses import Responses
+# URL handling
+import urllib.parse
+# Request parsing
+from request_parser import RequestParser
 
 try:
     from yaml import CLoader as Loader # Author suggests using the C version of the loader
@@ -166,7 +167,7 @@ class HelperFunctions:
 # Reads an IP blacklist
 def readblacklist():
     try:
-        # global blacklist_array
+        # blacklist_array
         blacklist_array = []
 
         # If the blacklist doesn't exist, create a blank file
@@ -180,7 +181,7 @@ def readblacklist():
         # else: # Returns the blacklist if in memory
         #    return blacklist_array
     except:
-        logging.error("Unable to read the IP blacklist!")
+        logging.error("Unable to read the IP blacklist")
 
 
 class Server:
@@ -279,7 +280,7 @@ class Server:
             except Exception as e:
                 socket_closed = False
 
-            string_list = request.split(" ")  # Split request by space
+            string_list = request.split(' ')  # Split request by space
             method = string_list[0]
 
             try:
@@ -301,7 +302,7 @@ class Server:
                 rfile = requested_file.split('?')[0]
                 rfile = rfile.lstrip('/')
                 # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
-                rfile = rfile.replace("%20", ' ')
+                rfile = urllib.parse.unquote(rfile)
 
                 # PAGE DEFAULTS
                 if(rfile == ''):

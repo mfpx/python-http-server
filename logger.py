@@ -1,6 +1,9 @@
+# Logging
 import logging
 import logging.handlers
+# Date and time formatting
 from datetime import datetime
+# Coloured text support - mainly for readabilty
 from termcolor import colored
 
 class CustomFormatter(logging.Formatter):
@@ -26,6 +29,9 @@ class CustomFormatter(logging.Formatter):
             return colored(record.levelname, "magenta")
         else:
             return colored(record.levelname, "white")
+
+    def formatException(self, ei: tuple) -> str:
+        return f"{colored(ei[0], 'red')}: {ei[1]}"
 
 class Logger:
 

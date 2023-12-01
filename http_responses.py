@@ -25,7 +25,7 @@ class Responses:
             000: "Unknown Status",
         }
 
-    def __strnumeric(self, string) -> int:
+    def __strnumeric(self, string: str) -> int:
         if isinstance(string, str) and string.isnumeric():
             return int(string)
         elif isinstance(string, int):
@@ -33,15 +33,15 @@ class Responses:
         else:
             return 000
         
-    def get_response(self, code) -> str:
+    def get_response(self, code: str | int) -> str:
         code = self.__strnumeric(code)
         return self.responses[code]
     
-    def get_response_header(self, code) -> str:
+    def get_response_header(self, code: str | int) -> str:
         code = self.__strnumeric(code)
         return f"HTTP/1.1 {code} {self.responses[code]}\r\n"
 
-    def get_response_body(self, code) -> str:
+    def get_response_body(self, code: str | int) -> str:
         code = self.__strnumeric(code)
 
         template = open("responses/response.html.template", 'r')
@@ -51,7 +51,7 @@ class Responses:
         return template_content.substitute({"code": code, "code_text": self.responses[code]})
 
 class Headers:
-    def __call__(self) -> None:
+    def __call__(self):
         raise RuntimeError(f'Do not call {self.__name__} directly')
 
     
