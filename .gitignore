@@ -3,10 +3,10 @@ htdocs/test/*
 *pycache*
 certs/*
 .vscode
+.pytest_cache
 dist/*
 __pycache__/*
-build/*
+build
 *.spec
 *.pyc
-crypto.py
 venv

@@ -165,7 +165,7 @@ class HelperFunctions:
 
 
 # Reads an IP blacklist
-def readblacklist():
+def readblacklist() -> list:
     try:
         # blacklist_array
         blacklist_array = []
