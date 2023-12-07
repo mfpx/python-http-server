@@ -2,6 +2,7 @@ import pam
 import datetime
 import json
 import uuid
+import os
 from time import sleep
 
 class Auth:
