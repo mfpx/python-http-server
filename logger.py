@@ -8,8 +8,14 @@ from termcolor import colored
 
 class CustomFormatter(logging.Formatter):
 
+    def set_colour_mode(self, is_colour: bool) -> None:
+        self.is_colour = is_colour
+
     def format(self, record: logging.LogRecord) -> str:
-        log_message = f"[{self.__asctime(record, '%c')}] [{self.__colour_level(record)}]: {record.getMessage()}"
+        if self.is_colour:
+            log_message = f"[{self.__asctime(record, '%c')}] [{self.__colour_level(record)}]: {record.getMessage()}"
+        else:
+            log_message = f"[{self.__asctime(record, '%c')}] [{record.levelname}]: {record.getMessage()}"
         return log_message
 
     def __asctime(self, record: logging.LogRecord, datefmt: str = None) -> str:
@@ -76,20 +82,32 @@ class Logger:
             return 0
 
     def logging_init(self) -> logging.Logger:
+        # Coloured formatter
+        coloured_formatter = CustomFormatter()
+        coloured_formatter.set_colour_mode(True)
+
+        # Uncoloured formatter
+        uncoloured_formatter = CustomFormatter()
+        uncoloured_formatter.set_colour_mode(False)
+
+        # Setup logging
         stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(CustomFormatter())
+        stream_handler.setFormatter(coloured_formatter)
+        file_handler = logging.handlers.RotatingFileHandler(
+            self.logger_config["logfile"],
+            'a',
+            self.__unit_conversion(
+                self.logger_config["logfile_unit"],
+                self.logger_config["logfile_maxsize"],
+                'bytes'),
+            5)
+        file_handler.setFormatter(uncoloured_formatter)
 
         if self.logger_config["logging"]:
             handlers = [
-                logging.handlers.RotatingFileHandler(
-                    self.logger_config["logfile"],
-                    'a',
-                    self.__unit_conversion(
-                        self.logger_config["logfile_unit"],
-                        self.logger_config["logfile_maxsize"],
-                        'bytes'),
-                    5),
-                stream_handler]
+                file_handler,
+                stream_handler
+            ]
         else:
             # If logging is disabled, only log to stdout
             handlers = [stream_handler]

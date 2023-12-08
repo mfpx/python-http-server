@@ -44,6 +44,8 @@ from http_responses import Responses
 import urllib.parse
 # Request parsing
 from request_parser import RequestParser
+# Debug traces
+import traceback
 
 try:
     from yaml import CLoader as Loader # Author suggests using the C version of the loader
@@ -249,19 +251,19 @@ class Server:
             data = await reader.read(2048)
             request = data.decode("utf-8")
             address = writer.get_extra_info("peername")
-            try:
-                readblacklist().index(address[0])
 
+            if address[0] in readblacklist():
                 # 403 to signify that the client is not allowed to access the resource
-                header = "HTTP/1.1 403 Forbidden\n"
+                header = r.get_response_header(403)
                 if cfg["signature_reporting"]:
-                    header += f'Server: {cfg["signature"]}\n'  # Server name
+                    header += f'Server: {cfg["signature"]}\n' # Server name
                 # Tells the client not to cache the responses
                 header += "Cache-Control: no-store\n"
                 header += "Content-Type: text/html\n\n"  # Set MIMEtype to text/html
 
-                response = Responses().get_response_body(
-                    cfg["blacklist_rcode"])  # Get the 403 page
+                response = r.get_response_body(
+                    cfg["blacklist_rcode"]
+                ).encode("utf-8")  # Get the 403 page
                 if response is False:
                     socket_closed = True
                     await writer.drain()
@@ -277,18 +279,20 @@ class Server:
                     logging.info(f"IP {address[0]} in blacklist. Closing connection.")
 
                     socket_closed = True
-            except Exception as e:
+            else:
                 socket_closed = False
 
-            string_list = request.split(' ')  # Split request by space
-            method = string_list[0]
-
+            # Request parser
+            parser = RequestParser()
             try:
-                requested_file = string_list[1]
-            except IndexError:
+                # Parse the request. Request data is stored in the parser object instance.
+                parser.parse_request(request)
+                method = parser.REQUEST_METHOD
+                requested_file = parser.REQUEST_PATH
+            except:
                 if socket_closed is False:
                     # Client likely wanted to see if the server is alive
-                    logging.info("State check received from client")
+                    logging.info("Unable to parse request, ignoring\n")
 
             if socket_closed is False:
                 if not method:
@@ -358,6 +362,7 @@ class Server:
 
         except Exception as e:
             logging.error(f"Exception: {e}")
+            logging.debug(traceback.format_exc())
             writer.close()
             await writer.wait_closed()
 
