@@ -1,24 +1,24 @@
 from abc import abstractmethod
 
-"""
-Plugin interface.
-- Methods
-    - `init` must be implemented. It is called when the plugin is loaded.
-    - `init_finish` must be implemented. It is called when the plugin loading is finished. It may be empty.
-"""
 class Plugin:
+    """
+    Plugin interface.
+    - Methods
+        - `init` must be implemented. It is called when the plugin is loaded.
+        - `init_finish` must be implemented. It is called when the plugin loading is finished. It may be empty.
+    """
 
-    """
-    Called when the plugin is being loaded.
-    """
     @abstractmethod
     def init(self):
+        """
+        Called when the plugin is being loaded.
+        """
         pass
 
-    """
-    Called when the plugin has finished loading. Optional.
-    """
     @abstractmethod
     def init_finish(self):
+        """
+        Called when the plugin has finished loading. Optional.
+        """
         pass
 

@@ -2,7 +2,7 @@ from string import Template
 
 class Responses:
     def __call__(self) -> None:
-        raise RuntimeError(f'Do not call {self.__name__} directly')
+        raise RuntimeError(f"Do not call {self.__name__} directly")
 
     def __init__(self) -> None:
         self.responses = {
@@ -52,6 +52,6 @@ class Responses:
 
 class Headers:
     def __call__(self):
-        raise RuntimeError(f'Do not call {self.__name__} directly')
+        raise RuntimeError(f"Do not call {self.__name__} directly")
 
     

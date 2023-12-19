@@ -1,6 +1,4 @@
 # To do:
-# -Implement multi-port listeners for HTTP/HTTPS - Won't implement
-# -Fix a crash where the certificate is untrusted (WORKAROUND DONE)
 # -Implement better SSL-related crash handling
 # -Add threading to support multiple clients (PART DONE)
 # -Add fuzzing using atheris - Backlog
@@ -32,7 +30,7 @@ import logger
 # Python file type magic
 import magic
 # Import handling
-from importlib import import_module
+from importlib import import_module, reload
 # Class inspection for reflection
 import inspect
 # Typehinting for reflection where a class object reference is returned
@@ -43,26 +41,54 @@ from http_responses import Responses
 # URL handling
 import urllib.parse
 # Request parsing
-from request_parser import RequestParser
+from request_parser import RequestParser, HTTP
 # Debug traces
 import traceback
+# Output caching
+from functools import cache
+# Python-based page module hashing
+import hashlib
 
 try:
     from yaml import CLoader as Loader # Author suggests using the C version of the loader
 except ImportError:
     from yaml import Loader # If above doesn't work, default to generic loader
 
-# Globals
-content_array = []
-CUSTOM_CONFIG = False
-
 class HelperFunctions:
 
-    def __init__(self, custom_config = None):
+    def __init__(self, custom_config = False):
         self.custom_config = custom_config
+        self.plugin_list = []
+        self.python_page_hashes = {}
+
+
+    def compute_hash(self, path: str, store: bool = False) -> str:
+        """Computes the hash of a given file"""
+        # Open the file
+        with open(path, "rb") as file:
+            # Read the file's contents
+            contents = file.read()
+            # Compute the hash
+            if store is True:
+                self.python_page_hashes[path] = hashlib.sha256(contents).hexdigest()
+                return self.python_page_hashes[path]
+            else:
+                return hashlib.sha256(contents).hexdigest()
+
+
+    def get_hash(self, path: str) -> str:
+        """Returns the hash of a given file"""
+        # Check if the hash is already cached
+        if path in self.python_page_hashes:
+            return self.python_page_hashes[path]
+        # If not, compute it
+        self.compute_hash(path, True)
+        # Return the hash
+        return self.python_page_hashes[path]
 
 
     def __has_method(self, class_obj: Type, method_name: str) -> bool:
+        """Check if a class has a method with a given name"""
         if hasattr(class_obj, method_name):
             method = getattr(class_obj, method_name)
             return callable(method) and method.__qualname__.split(".")[0] == class_obj.__name__
@@ -70,6 +96,7 @@ class HelperFunctions:
 
 
     def __plugin_init_class(self, module: ModuleType) -> Optional[Type]:
+        """Finds the plugin's init class"""
         # Get the module's attributes
         attributes = dir(module)
         # Find the plugin's init function
@@ -80,40 +107,37 @@ class HelperFunctions:
         if module.PLUGIN_DATA["meta"]["initclass"] in attributes:
             return getattr(module, module.PLUGIN_DATA["meta"]["initclass"])
 
+    
+    def __plugin_obj_to_str(self, obj: ModuleType) -> str:
+        """Converts a plugin object to a string"""
+        return f'{obj.PLUGIN_DATA["name"]} (v{obj.PLUGIN_DATA["version"]}) by {obj.PLUGIN_DATA["author"]}'
 
-    # Reads the configuration file into an array
+
+    @cache
     def readcfg(self) -> dict:
-        global content_array
-        if not content_array:  # Is the configuration file loaded into memory?
-            if CUSTOM_CONFIG:
-                try:
-                    with open(CUSTOM_CONFIG) as f:
-                        content_array = yaml.load(f, Loader=Loader)
-                        return content_array
-                except Exception: # Catch the base class for exceptions
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c'))
-                                + str(']: '), 'Unable to find specified config file'))
-                    print(msg)
-                    # Kill the server ungracefully - prevents duplicate stdout messages
-                    os._exit(1)
-            else:
-                try:
-                    with open('conf.yml') as f:
-                        content_array = yaml.load(f, Loader=Loader)
-                        return content_array
-                except Exception: # Catch the base class for exceptions
-                    msg = ''.join(('[' + str(datetime.datetime.now().strftime('%c')
-                                            ) + str(']: '), 'Unable to read configuration file!'))
-                    print(msg)
-                    # Kill the server ungracefully - prevents duplicate stdout messages
-                    os._exit(1)
-        # If it is, return the array instead of reading the config file again (reduces iops)
+        """Loads the configuration file into a dictionary"""
+        if self.custom_config:
+            try:
+                with open(self.custom_config) as f:
+                    config_data = yaml.load(f, Loader=Loader)
+                    return config_data
+            except:
+                logging.critical("Unable to find specified config file")
+                # Kill the server ungracefully - prevents duplicate stdout messages
+                os._exit(1)
         else:
-            return content_array
+            try:
+                with open("conf.yml") as f:
+                    config_data = yaml.load(f, Loader=Loader)
+                    return config_data
+            except:
+                logging.critical("Unable to find specified config file")
+                os._exit(1)
 
 
     # Plugin loader function
     def load_plugins(self) -> bool:
+        """Loads the plugins from the plugins directory"""
         # Load plugins from the plugins directory
         plugin_dir = cfg["plugins_dir"]
         if os.path.exists(plugin_dir):
@@ -128,10 +152,11 @@ class HelperFunctions:
                         # Call the expected init function
                         if self.__has_method(init_class, "init"):
                             init_class().init()
+                            self.plugin_list.append(plugin_module)
                         else:
                             raise ImportError(f"Plugin {name} is missing an init function")
                         # Log that the plugin was loaded
-                        logging.info(f"Loaded plugin {plugin_module.PLUGIN_DATA['name']}, version {plugin_module.PLUGIN_DATA['version']} by {plugin_module.PLUGIN_DATA['author']}")
+                        logging.info(f"Loaded plugin {self.__plugin_obj_to_str(plugin_module)}")
                     except Exception as e:
                         logging.error(f"Error loading plugin: {name}")
                         logging.error(str(e))
@@ -142,6 +167,7 @@ class HelperFunctions:
 
 
     def __argparser(self) -> argparse.Namespace:
+        """Argument parser"""
         parser = argparse.ArgumentParser()
         parser.add_argument("-i", "--host", help = "Address to listen on", type = str)
         parser.add_argument("-p", "--port", help = "Port to listen on", type = int)
@@ -151,10 +177,11 @@ class HelperFunctions:
 
 
     def arg_actions(self) -> dict:
+        """Argument actions"""
         args = self.__argparser()
-        argdict = dict()
+        argdict = {}
         if args.custom_config != None:
-            CUSTOM_CONFIG = args.custom_config
+            self.custom_config = args.custom_config
         if args.host != None:
             argdict["host"] = args.host
         if args.port != None:
@@ -168,6 +195,7 @@ class HelperFunctions:
 
 # Reads an IP blacklist
 def readblacklist() -> list:
+    """Reads the IP blacklist"""
     try:
         # blacklist_array
         blacklist_array = []
@@ -187,6 +215,7 @@ def readblacklist() -> list:
 
 
 class Server:
+    """Main server class"""
 
     def __init__(self, args, host = "127.0.0.1", port = 8080):
 
@@ -206,6 +235,7 @@ class Server:
 
 
     async def server_main(self) -> None:
+        """Main server method"""
         # Encrypt traffic using a certificate
         if cfg["use_encryption"]:
             try:
@@ -246,6 +276,7 @@ class Server:
 
 
     async def response(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        """Handles incoming requests"""
         try:
             r = Responses()
             data = await reader.read(2048)
@@ -302,10 +333,11 @@ class Server:
                     logging.info(f"{method} {requested_file}")
 
             if socket_closed is False:
+                python_page = False
                 # Parameters after ? are not relevant
                 rfile = requested_file.split('?')[0]
                 rfile = rfile.lstrip('/')
-                # Most browsers replace whitespaces with %20 sequence, this replaces it back for filenames/directories
+                # Replace escape sequences with their actual characters
                 rfile = urllib.parse.unquote(rfile)
 
                 # PAGE DEFAULTS
@@ -315,15 +347,35 @@ class Server:
                 elif rfile.endswith('/'):
                     # Load index file as default
                     rfile += cfg["default_filename"]
-                elif (path.exists(f"htdocs/{rfile}") and not(path.isfile(f"htdocs/{rfile}"))):
+                elif path.isfile(f"htdocs/{rfile}.py"):
+                    try:
+                        python_page = True
+                        if hf.compute_hash(f"htdocs/{rfile}.py") == hf.get_hash(f"htdocs/{rfile}.py"):
+                            page = import_module(f"htdocs.{rfile.replace('/', '.')}")
+                        else:
+                            logging.warning(f"File {rfile}.py has been modified. Reloading...")
+                            page = reload(import_module(f"htdocs.{rfile.replace('/', '.')}"))
+                            hf.compute_hash(f"htdocs/{rfile}.py", True)
+                    except:
+                        socket_closed = True
+                        logging.error(f"Unable to load {rfile}.py")
+                elif path.exists(f"htdocs/{rfile}" and not path.isfile(f"htdocs/{rfile}")):
                     # Load index file as default
                     rfile += '/' + cfg["default_filename"]
 
                 try:
-                    # open file, r => read , b => byte format
-                    file = open(f"htdocs/{rfile}", "rb")
-                    response = file.read()  # Read the input stream into response
-                    file.close()  # Close the file once read
+                    # open file, r => read, b => byte format
+                    if python_page is not True:
+                        file = open(f"htdocs/{rfile}", "rb")
+                        response = file.read()  # Read the input stream into response
+                        file.close()  # Close the file once read
+                    else:
+                        if isinstance(page.render(HTTP(request)), tuple):
+                            response = page.render(HTTP(request))[1].encode("utf-8")  # Render the page
+                            content_type = page.render(HTTP(request))[0] # Get the MIMEtype
+                        else:
+                            response = page.render(HTTP(request)).encode("utf-8")  # Render the page
+                            content_type = "text/html" # Default to text/html if not MIMEtype is set
 
                     if socket_closed is False:
                         logging.info("Found requested resource")
@@ -335,9 +387,12 @@ class Server:
                         header += f'Server: {cfg["signature"]}\n'  # Server name
                     # Tells the client to validate their cache on load
                     header += 'Cache-Control: no-cache, must-revalidate\n'
-                    header += f'Content-Type: {str(magic.from_file(f"htdocs/{rfile}", mime=True))}\n\n'
+                    if not python_page:
+                        header += f'Content-Type: {str(magic.from_file(f"htdocs/{rfile}", mime=True))}\n\n'
+                    else:
+                        header += f"Content-Type: {content_type}\n\n" # Get MIME from content
 
-                except Exception as e:
+                except:
                     if socket_closed is False:
                         logging.info("Unable to find requested resource!")
                     # If unable to read the specified file, assume it does not exist and return 404
@@ -366,6 +421,7 @@ class Server:
             writer.close()
             await writer.wait_closed()
 
+
 if __name__ == "__main__":
     hf = HelperFunctions()
     cfg = hf.readcfg()
@@ -379,3 +435,5 @@ if __name__ == "__main__":
         asyncio.run(server.server_main())
     except KeyboardInterrupt:
         loop.stop()
+        print("Server stopped via interactive keyboard interrupt")
+
