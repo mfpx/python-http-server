@@ -134,6 +134,25 @@ class HelperFunctions:
                 logging.critical("Unable to find specified config file")
                 os._exit(1)
 
+    
+    @cache
+    def readblacklist(self) -> list:
+        """Reads the IP blacklist"""
+        try:
+            # blacklist_array
+            blacklist_array = []
+
+            # If the blacklist doesn't exist, create a blank file
+            if (not path.isfile(cfg["blacklist"])):
+                open(cfg["blacklist"], 'x')
+
+            with open(cfg["blacklist"]) as f:
+                for line in f:
+                    blacklist_array.append(line.rstrip('\n'))
+                return blacklist_array
+        except:
+            logging.error("Unable to read the IP blacklist")
+
 
     # Plugin loader function
     def load_plugins(self) -> bool:
@@ -191,27 +210,6 @@ class HelperFunctions:
             return argdict
         else:
             return {}
-
-
-# Reads an IP blacklist
-def readblacklist() -> list:
-    """Reads the IP blacklist"""
-    try:
-        # blacklist_array
-        blacklist_array = []
-
-        # If the blacklist doesn't exist, create a blank file
-        if (not path.isfile(cfg["blacklist"])):
-            open(cfg["blacklist"], 'x')
-
-        with open(cfg["blacklist"]) as f:
-            for line in f:
-                blacklist_array.append(line.rstrip('\n'))
-            return blacklist_array
-        # else: # Returns the blacklist if in memory
-        #    return blacklist_array
-    except:
-        logging.error("Unable to read the IP blacklist")
 
 
 class Server:
@@ -283,7 +281,7 @@ class Server:
             request = data.decode("utf-8")
             address = writer.get_extra_info("peername")
 
-            if address[0] in readblacklist():
+            if address[0] in hf.readblacklist():
                 # 403 to signify that the client is not allowed to access the resource
                 header = r.get_response_header(403)
                 if cfg["signature_reporting"]:
@@ -375,7 +373,7 @@ class Server:
                             content_type = page.render(HTTP(request))[0] # Get the MIMEtype
                         else:
                             response = page.render(HTTP(request)).encode("utf-8")  # Render the page
-                            content_type = "text/html" # Default to text/html if not MIMEtype is set
+                            content_type = "text/html"  # Default to text/html if not MIMEtype is set
 
                     if socket_closed is False:
                         logging.info("Found requested resource")

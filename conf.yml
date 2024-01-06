@@ -36,8 +36,8 @@ logfile: logs/log.txt
 # Maximum filesize of a single logfile
 # This prevents very large logfiles from being generated
 #
-# Default: 10, Recommended: <100
-logfile_maxsize: 10
+# Default: 5, Recommended: <50MB
+logfile_maxsize: 5
 # Units available: bytes, kilobytes, megabytes, gigabytes
 logfile_unit: megabytes
 
