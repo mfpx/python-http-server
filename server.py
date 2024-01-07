@@ -339,12 +339,9 @@ class Server:
                 rfile = urllib.parse.unquote(rfile)
 
                 # PAGE DEFAULTS
-                if(rfile == ''):
+                if rfile == '' or rfile.endswith('/'):
                     # Load index file as default
                     rfile = cfg["default_filename"]
-                elif rfile.endswith('/'):
-                    # Load index file as default
-                    rfile += cfg["default_filename"]
                 elif path.isfile(f"htdocs/{rfile}.py"):
                     try:
                         python_page = True
@@ -357,7 +354,7 @@ class Server:
                     except:
                         socket_closed = True
                         logging.error(f"Unable to load {rfile}.py")
-                elif path.exists(f"htdocs/{rfile}" and not path.isfile(f"htdocs/{rfile}")):
+                elif path.exists(f"htdocs/{rfile}") and not path.isfile(f"htdocs/{rfile}"):
                     # Load index file as default
                     rfile += '/' + cfg["default_filename"]
 
