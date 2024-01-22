@@ -23,6 +23,9 @@ jobs:
         id: get_tag
         run: echo "::set-output name=TAG::$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')"
 
+      - name: Print Tag
+        run: echo "Tag is ${{ steps.get_tag.outputs.TAG }}"
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
