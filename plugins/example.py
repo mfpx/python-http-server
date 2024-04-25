@@ -5,7 +5,8 @@ PLUGIN_DATA = {
     "version": "1.0.0", # Version of the plugin
     "author": "David Stumbra", # Author of the plugin
     "meta": { # Meta data for the plugin
-        "initclass": "PluginInit_ExamplePlugin" # Optional. This is used if reflection fails to find the init function
+        "initclass": "PluginInit_ExamplePlugin", # Optional. This is used if reflection fails to find the init function
+        "postload": False # Optional. If set to True, the plugin will be loaded after the server is loaded
     }
 }
 

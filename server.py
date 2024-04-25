@@ -107,6 +107,13 @@ class HelperFunctions:
         if module.PLUGIN_DATA["meta"]["initclass"] in attributes:
             return getattr(module, module.PLUGIN_DATA["meta"]["initclass"])
 
+
+    def __is_postload(self, module: ModuleType) -> bool:
+        """Check if a plugin is marked as postload"""
+        if "postload" in module.PLUGIN_DATA["meta"]:
+            return module.PLUGIN_DATA["meta"]["postload"]
+        return False
+
     
     def __plugin_obj_to_str(self, obj: ModuleType) -> str:
         """Converts a plugin object to a string"""
@@ -155,7 +162,7 @@ class HelperFunctions:
 
 
     # Plugin loader function
-    def load_plugins(self) -> bool:
+    def load_plugins(self, postload: bool = False) -> bool:
         """Loads the plugins from the plugins directory"""
         # Load plugins from the plugins directory
         plugin_dir = cfg["plugins_dir"]
@@ -165,17 +172,23 @@ class HelperFunctions:
                 if plugin.endswith(".py"):
                     name = plugin[:-3]
                     try:
+                        # Set a plugin append flag
+                        p_added = False
                         # Importlib to handle the programmatic import
                         plugin_module = import_module(f"{plugin_dir}.{name}")
                         init_class = self.__plugin_init_class(plugin_module)
                         # Call the expected init function
                         if self.__has_method(init_class, "init"):
-                            init_class().init()
-                            self.plugin_list.append(plugin_module)
+                            if self.__is_postload(plugin_module) == postload:
+                                init_class().init()
+                                self.plugin_list.append(plugin_module)
+                                p_added = True
                         else:
                             raise ImportError(f"Plugin {name} is missing an init function")
                         # Log that the plugin was loaded
-                        logging.info(f"Loaded plugin {self.__plugin_obj_to_str(plugin_module)}")
+                        if plugin_module in self.plugin_list and p_added == True:
+                            logging.debug(self.plugin_list)
+                            logging.info(f"Loaded plugin {self.__plugin_obj_to_str(plugin_module)}")
                     except Exception as e:
                         logging.error(f"Error loading plugin: {name}")
                         logging.error(str(e))
@@ -425,6 +438,7 @@ if __name__ == "__main__":
     args = hf.arg_actions()
     server = Server(args)
     loop = asyncio.get_event_loop()
+    hf.load_plugins(postload = True)
 
     try:
         asyncio.run(server.server_main())

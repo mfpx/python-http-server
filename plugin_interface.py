@@ -3,9 +3,9 @@ from abc import abstractmethod
 class Plugin:
     """
     Plugin interface.
-    - Methods
-        - `init` must be implemented. It is called when the plugin is loaded.
-        - `init_finish` must be implemented. It is called when the plugin loading is finished. It may be empty.
+        Methods:
+        :param init: must be implemented. It is called when the plugin is loaded.
+        :param init_finish: must be implemented. It is called when the plugin loading is finished. It may be empty.
     """
 
     @abstractmethod
