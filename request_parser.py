@@ -55,7 +55,11 @@ class RequestParser:
             remainder = remainder[1:]
 
         if remainder.isdigit():
-            return host.strip('[]'), int(remainder)
+            port = int(remainder)
+            if 0 <= port <= 65535:
+                return host.strip('[]'), port
+            else:
+                raise ValueError(f"Port number out of range: {remainder}")
         return host.strip('[]'), 80
 
     @staticmethod
