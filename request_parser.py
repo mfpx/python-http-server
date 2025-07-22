@@ -1,3 +1,6 @@
+import logging
+
+
 class RequestParser:
     """Deals with parsing requests"""
 
@@ -13,27 +16,52 @@ class RequestParser:
         """Parse the request and store the relevant information"""
         try:
             request_lines = request.strip().splitlines()
+        except Exception as e:
+            logging.error(f"Error processing request: {e}")
+            return
 
-            self.REQUEST_METHOD = request_lines[0].split(' ')[0]
-            self.REQUEST_PATH = request_lines[0].split(' ')[1]
-            self.REQUEST_FILE = self.REQUEST_PATH.split('/')[-1].split('?')[0]
-            self.REQUEST_HOST = request_lines[1].split(':')[1]
-            try:
-                # Check if the port is present
-                self.REQUEST_PORT = request_lines[1].split(':')[2]
-            except IndexError:
-                # Implied port
-                self.REQUEST_PORT = 80
+        if not request_lines:
+            logging.info("Empty request received")
+            return
 
-            self.REQUEST_HEADERS = {}
-            for header in request_lines[2:]:
-                key, value = header.split(": ", 1)
+        first_line = request_lines[0].split()
+        if len(first_line) < 3:
+            logging.info("Malformed request line")
+            return
+
+        self.REQUEST_METHOD = first_line[0]
+        self.REQUEST_PATH = first_line[1]
+        self.REQUEST_FILE = self.REQUEST_PATH.split('/')[-1].split('?')[0]
+
+        self.REQUEST_HEADERS = {}
+        host_value = None
+        for header in request_lines[1:]:
+            if not header:
+                continue
+            if ':' not in header:
+                logging.info(f"Malformed header line: {header}")
+                continue
+            key, value = header.split(':', 1)
+            value = value.lstrip()
+            if key.lower() == 'host':
+                host_value = value
+            else:
                 self.REQUEST_HEADERS[key] = value
-        except:
-            raise ValueError("Unable to parse request")
+
+        if host_value is not None:
+            if ':' in host_value:
+                host, port = host_value.split(':', 1)
+                self.REQUEST_HOST = host.strip()
+                self.REQUEST_PORT = port.strip()
+            else:
+                self.REQUEST_HOST = host_value.strip()
+                self.REQUEST_PORT = 80
+        else:
+            logging.info("Host header missing")
+            self.REQUEST_PORT = 80
 
     @staticmethod
-    def parse_value_by_sep(value: str, include_key: False, key_separator='=', value_separator=',') -> list | dict | str:
+    def parse_value_by_sep(value: str, include_key: bool = False, key_separator='=', value_separator=',') -> list | dict | str:
         """Parse a value by a given separator"""
         if include_key:
             if key_separator not in value:
