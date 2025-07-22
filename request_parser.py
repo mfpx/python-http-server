@@ -42,9 +42,7 @@ class RequestParser:
         if not host_header:
             return '', 80
         if host_header.startswith('['):
-            host_part, sep, port_part = host_header.rpartition(']')
-            host = host_part + ']' if sep else host_header
-            remainder = port_part
+            host, remainder = self._parse_ipv6_host(host_header)
         else:
             host, sep, remainder = host_header.rpartition(':')
             if not sep:
