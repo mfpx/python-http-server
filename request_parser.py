@@ -14,26 +14,52 @@ class RequestParser:
         try:
             request_lines = request.strip().splitlines()
 
-            self.REQUEST_METHOD = request_lines[0].split(' ')[0]
-            self.REQUEST_PATH = request_lines[0].split(' ')[1]
+            request_line_parts = request_lines[0].split()
+            if len(request_line_parts) < 3:
+                raise ValueError("Invalid request line")
+            self.REQUEST_METHOD = request_line_parts[0]
+            self.REQUEST_PATH = request_line_parts[1]
             self.REQUEST_FILE = self.REQUEST_PATH.split('/')[-1].split('?')[0]
-            self.REQUEST_HOST = request_lines[1].split(':')[1]
-            try:
-                # Check if the port is present
-                self.REQUEST_PORT = request_lines[1].split(':')[2]
-            except IndexError:
-                # Implied port
-                self.REQUEST_PORT = 80
 
             self.REQUEST_HEADERS = {}
-            for header in request_lines[2:]:
-                key, value = header.split(": ", 1)
-                self.REQUEST_HEADERS[key] = value
-        except:
+            for header in request_lines[1:]:
+                if header == '':
+                    continue
+                key, _, value = header.partition(':')
+                if not _:
+                    raise ValueError("Unable to parse header")
+                self.REQUEST_HEADERS[key] = value.strip()
+
+            host_header = self.REQUEST_HEADERS.get('Host', '')
+            host, port = self._parse_host(host_header)
+            self.REQUEST_HOST = host
+            self.REQUEST_PORT = port
+        except Exception:
             raise ValueError("Unable to parse request")
 
+    def _parse_host(self, host_header: str) -> tuple[str, int]:
+        """Parse host and port from Host header"""
+        if not host_header:
+            return '', 80
+        if host_header.startswith('['):
+            host_part, sep, port_part = host_header.rpartition(']')
+            host = host_part + ']' if sep else host_header
+            remainder = port_part
+        else:
+            host, sep, remainder = host_header.rpartition(':')
+            if not sep:
+                host = host_header
+                remainder = ''
+
+        if remainder.startswith(':'):
+            remainder = remainder[1:]
+
+        if remainder.isdigit():
+            return host.strip('[]'), int(remainder)
+        return host.strip('[]'), 80
+
     @staticmethod
-    def parse_value_by_sep(value: str, include_key: False, key_separator='=', value_separator=',') -> list | dict | str:
+    def parse_value_by_sep(value: str, include_key: bool = False, key_separator='=', value_separator=',') -> list | dict | str:
         """Parse a value by a given separator"""
         if include_key:
             if key_separator not in value:
