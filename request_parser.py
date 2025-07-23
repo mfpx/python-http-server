@@ -52,7 +52,7 @@ class RequestParser:
             if ':' in host_value:
                 host, port = host_value.split(':', 1)
                 self.REQUEST_HOST = host.strip()
-                self.REQUEST_PORT = port.strip()
+                self.REQUEST_PORT = int(port.strip())
             else:
                 self.REQUEST_HOST = host_value.strip()
                 self.REQUEST_PORT = 80
