@@ -14,11 +14,10 @@ class RequestParser:
 
     def parse_request(self, request: str) -> None:
         """Parse the request and store the relevant information"""
-        try:
-            request_lines = request.strip().splitlines()
-        except Exception as e:
-            logging.error(f"Error processing request: {e}")
+        if not isinstance(request, str):
+            logging.error("Invalid request: Expected a string")
             return
+        request_lines = request.strip().splitlines()
 
         if not request_lines:
             logging.info("Empty request received")
