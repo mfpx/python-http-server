@@ -49,5 +49,5 @@ def test_parse_request_headers_with_port_and_space():
     )
     http = HTTP(request)
     assert http.REQUEST_HOST == "www.example.com"
-    assert http.REQUEST_PORT == "8080"
+    assert http.REQUEST_PORT == 8080
     assert http.REQUEST_HEADERS["Accept"] == "text/html"
