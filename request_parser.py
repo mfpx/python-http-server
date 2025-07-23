@@ -58,6 +58,7 @@ class RequestParser:
                 self.REQUEST_PORT = 80
         else:
             logging.info("Host header missing")
+            self.REQUEST_HOST = None
             self.REQUEST_PORT = 80
 
     @staticmethod
