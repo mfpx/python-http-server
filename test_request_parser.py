@@ -9,8 +9,8 @@ def test_parse_request_valid():
 
 def test_parse_request_invalid():
     request = "invalid request"
-    with pytest.raises(ValueError):
-        http = HTTP(request)
+    http = HTTP(request)
+    assert http.REQUEST_METHOD is None
 
 def test_parse_value_by_sep_no_key():
     value = "a,b,c"
@@ -28,6 +28,26 @@ def test_parse_value_by_sep_no_separator():
     assert result == "abc"
 
 def test_parse_value_by_sep_invalid_key_separator():
-    value = "a:1,b:2" 
+    value = "a:1,b:2"
     with pytest.raises(ValueError):
         RequestParser.parse_value_by_sep(value, True)
+
+
+def test_parse_request_headers_without_space():
+    request = "GET / HTTP/1.1\r\nHost:www.example.com\r\nUser-Agent:Test\r\n\r\n"
+    http = HTTP(request)
+    assert http.REQUEST_HOST == "www.example.com"
+    assert http.REQUEST_PORT == 80
+    assert http.REQUEST_HEADERS["User-Agent"] == "Test"
+
+
+def test_parse_request_headers_with_port_and_space():
+    request = (
+        "GET / HTTP/1.1\r\n"
+        "Host: www.example.com:8080\r\n"
+        "Accept:text/html\r\n\r\n"
+    )
+    http = HTTP(request)
+    assert http.REQUEST_HOST == "www.example.com"
+    assert http.REQUEST_PORT == 8080
+    assert http.REQUEST_HEADERS["Accept"] == "text/html"
